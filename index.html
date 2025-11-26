@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>JCV Academy — Modern ClassPlus Style</title>
+<style>
+:root{
+  --primary:#0b63ff;
+  --muted:#6b7280;
+  --bg:#f6f8fb;
+  --card:#ffffff;
+  --accent:#eef6ff;
+  --radius:14px;
+  --glass: rgba(255,255,255,0.6);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  color:#0f172a;
+  -webkit-user-select:none;
+}
+.app {
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* HEADER */
+.header {
+  position:fixed;
+  top:0; left:0; right:0;
+  height:74px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  background:linear-gradient(180deg,var(--card),#f9fbff);
+  border-bottom:1px solid rgba(15,23,42,0.04);
+  z-index:1400;
+}
+.logo {
+  display:flex; align-items:center; gap:10px;
+}
+.logo .brand {
+  font-weight:700; font-size:18px; color:var(--primary);
+}
+.search {
+  flex:1;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:var(--accent);
+  padding:10px 12px;
+  border-radius:12px;
+  margin-right:8px;
+}
+.search input{
+  border:0; outline:0; background:transparent; font-size:15px; flex:1;
+}
+.avatar {
+  width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,var(--primary),#0066ff);
+  display:flex; align-items:center; justify-content:center; color:white; font-weight:700;
+  box-shadow: 0 6px 20px rgba(11,99,255,0.12);
+}
+
+/* MAIN CONTENT (below header) */
+.view {
+  padding:92px 16px 100px; /* account for header & bottom nav */
+  width:100%;
+  max-width:980px;
+  margin:0 auto;
+}
+
+/* Home top banner & grid */
+.banner {
+  background: linear-gradient(180deg, rgba(11,99,255,0.08), rgba(11,99,255,0.03));
+  border-radius:14px;
+  padding:14px;
+  display:flex; gap:12px; align-items:center;
+  margin-bottom:14px;
+  box-shadow: 0 6px 20px rgba(11,99,255,0.04);
+}
+.banner .left {flex:1}
+.banner h3{margin:0; font-size:16px}
+.banner p{margin:4px 0 0; color:var(--muted); font-size:13px}
+
+/* Icon grid */
+.grid {
+  display:grid;
+  grid-template-columns: repeat(4,1fr);
+  gap:12px;
+  margin-bottom:16px;
+}
+.card {
+  background:var(--card);
+  border-radius:12px;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  box-shadow: 0 6px 18px rgba(13,20,32,0.04);
+  cursor:pointer;
+  transition:transform .14s ease, box-shadow .14s ease;
+}
+.card:hover{ transform:translateY(-6px); box-shadow:0 12px 26px rgba(13,20,32,0.08) }
+.card .ic {
+  width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(180deg,#fff, #f7fbff); box-shadow: 0 8px 20px rgba(11,99,255,0.06);
+}
+.card small { display:block; color:var(--muted); margin-top:4px; font-size:13px; }
+
+/* Section title + list */
+.section-title { display:flex; justify-content:space-between; align-items:center; margin:18px 0 8px;}
+.section-title h4{margin:0; font-size:15px}
+.list {
+  display:flex; flex-direction:column; gap:10px;
+}
+.list .list-item {
+  background:var(--card); border-radius:12px; padding:12px; display:flex; gap:12px; align-items:center;
+  justify-content:space-between; box-shadow: 0 8px 22px rgba(2,6,23,0.02);
+}
+.list .list-item .meta { color:var(--muted); font-size:13px }
+
+/* CLASS / COURSES VIEW */
+.classes-grid {
+  display:grid; grid-template-columns: repeat(3,1fr); gap:10px;
+}
+.class-pill {
+  background:linear-gradient(90deg,#f8fbff,#ffffff);
+  border-radius:12px; padding:10px; text-align:center; font-weight:600; color:#0b63ff; cursor:pointer;
+  box-shadow: 0 8px 18px rgba(11,99,255,0.04);
+}
+
+/* Tabs content area re-use */
+.panel {
+  background:var(--card); border-radius:12px; padding:14px; box-shadow: 0 8px 22px rgba(2,6,23,0.02);
+}
+
+/* BOTTOM NAV */
+.bottom-nav {
+  position:fixed; left:0; right:0; bottom:0; height:78px; background:rgba(255,255,255,0.98);
+  border-top:1px solid rgba(15,23,42,0.05);
+  display:flex; justify-content:space-around; align-items:center; z-index:1500;
+}
+.bottom-nav .tab { flex:1; text-align:center; padding:8px 6px; cursor:pointer; color:var(--muted); }
+.bottom-nav .tab.active { color:var(--primary); font-weight:700; }
+.bottom-nav .tab svg{ display:block; margin:0 auto 6px; }
+
+/* POPUP VIEWER (PDF / Quiz) */
+.viewer-overlay {
+  position:fixed; inset:0; background:rgba(2,6,23,0.6); display:none; align-items:center; justify-content:center; z-index:2000;
+}
+.viewer {
+  width:94%; max-width:1000px; height:86vh; background:white; border-radius:12px; overflow:hidden; display:flex; flex-direction:column;
+  box-shadow:0 30px 80px rgba(2,6,23,0.32);
+}
+.viewer .v-header { padding:10px 12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eef2ff; }
+.viewer iframe { flex:1; border:0; width:100%; }
+.viewer .btn { background:var(--primary); color:white; padding:8px 12px; border-radius:10px; cursor:pointer; }
+
+/* small screens */
+@media (max-width:520px){
+  .grid{ grid-template-columns: repeat(3,1fr) }
+  .classes-grid{ grid-template-columns: repeat(2,1fr) }
+  .header{ height:74px }
+  .view{ padding:92px 12px 110px }
+  .bottom-nav{ height:78px }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo" style="width:220px">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" style="flex-shrink:0">
+        <rect x="2" y="3" width="20" height="14" rx="3" fill="url(#g)"></rect>
+        <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#0b63ff"/><stop offset="1" stop-color="#0066ff"/></linearGradient></defs>
+      </svg>
+      <div class="brand">JCV Academy</div>
+    </div>
+
+    <div class="search" role="search" onclick="document.getElementById('fsearch').focus()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21L16.65 16.65" stroke="#0b63ff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <input id="fsearch" placeholder="Search courses, tests, notes..." />
+      <div style="width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 4v8l6 4" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="avatar">JG</div>
+    </div>
+  </div>
+
+  <!-- MAIN VIEW -->
+  <main class="view" id="mainView">
+
+    <!-- HOME -->
+    <section id="home" class="screen active">
+      <div class="banner">
+        <div class="left">
+          <h3>Welcome back!</h3>
+          <p>Pick a section to continue — Live classes, Tests, Notes and more.</p>
+        </div>
+        <div style="width:86px; text-align:right">
+          <div style="background:linear-gradient(90deg,#eef6ff,#ffffff); padding:8px 10px; border-radius:10px; font-weight:700; color:var(--primary)">My Batches</div>
+        </div>
+      </div>
+
+      <div class="grid" id="homeGrid">
+        <div class="card" onclick="goTo('courses')">
+          <div class="ic">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 7l9-4 9 4v7a2 2 0 0 1-2 2h-4" stroke="#0b63ff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>Textbooks</div>
+          <small>Study material</small>
+        </div>
+
+        <div class="card" onclick="goTo('courses','model')">
+          <div class="ic">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 3v18" stroke="#0b63ff" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+          <div>Model Papers</div>
+          <small>Practice papers</small>
+        </div>
+
+        <div class="card" onclick="goTo('courses','previous')">
+          <div class="ic">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 7h18" stroke="#0b63ff" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+          <div>Previous Papers</div>
+          <small>Past years</small>
+        </div>
+
+        <div class="card" onclick="goTo('tests')">
+          <div class="ic">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#0b63ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>Online Tests</div>
+          <small>Timed quizzes</small>
+        </div>
+
+        <div class="card" onclick="openLive()">
+          <div class="ic">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M21 10.5a8.38 8.38 0 0 1 0 3" stroke="#0b63ff" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+          <div>Live Class</div>
+          <small>Join session</small>
+        </div>
+
+        <div class="card" onclick="goTo('content')">
+          <div class="ic">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h16" stroke="#0b63ff" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+          <div>Notes & PDFs</div>
+          <small>Download & view</small>
+        </div>
+
+        <div class="card" onclick="goTo('profile')">
+          <div class="ic">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10z" stroke="#0b63ff" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+          <div>Profile</div>
+          <small>Account</small>
+        </div>
+
+        <div class="card" onclick="goTo('content')">
+          <div class="ic">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 7h18v10H3z" stroke="#0b63ff" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+          <div>Notices</div>
+          <small>Announcements</small>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <h4>Recent Uploads</h4>
+        <div style="color:var(--muted);font-size:13px">See all</div>
+      </div>
+
+      <div class="list">
+        <div class="list-item">
+          <div>
+            <div style="font-weight:700">Maths - Chapter 5 Notes</div>
+            <div class="meta">Uploaded 2 days ago • Class 10</div>
+          </div>
+          <div>
+            <button class="btn" onclick="openDrivePDF('1a2b3c4d5e6f')">View</button>
+          </div>
+        </div>
+
+        <div class="list-item">
+          <div>
+            <div style="font-weight:700">Physics - Model Paper 2024</div>
+            <div class="meta">Uploaded 6 days ago • Class 12</div>
+          </div>
+          <div>
+            <button class="btn" onclick="openDrivePDF('2b3c4d5e6f7g')">View</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COURSES / CLASSES -->
+    <section id="courses" class="screen" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="margin:0">Courses</h3>
+        <div style="color:var(--muted);font-size:13px" id="coursesSub">Textbooks</div>
+      </div>
+
+      <div class="panel">
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="classPills">
+          <div class="class-pill" onclick="openClass(6)">Class 6</div>
+          <div class="class-pill" onclick="openClass(7)">Class 7</div>
+          <div class="class-pill" onclick="openClass(8)">Class 8</div>
+          <div class="class-pill" onclick="openClass(9)">Class 9</div>
+          <div class="class-pill" onclick="openClass(10)">Class 10</div>
+          <div class="class-pill" onclick="openClass(11)">Intermediate</div>
+        </div>
+
+        <div style="margin-top:14px" id="courseContent">
+          <div style="color:var(--muted); margin-bottom:8px">Select a class to view PDFs & model papers</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTENT (Notes & PDFs) -->
+    <section id="content" class="screen" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="margin:0">Notes & PDFs</h3>
+        <div style="color:var(--muted);font-size:13px">All material</div>
+      </div>
+
+      <div class="panel">
+        <div class="list" id="contentList">
+          <!-- Items inserted by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TESTS -->
+    <section id="tests" class="screen" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="margin:0">Online Tests</h3>
+        <div style="color:var(--muted);font-size:13px">Timed quizzes</div>
+      </div>
+
+      <div class="panel">
+        <div class="list">
+          <div class="list-item">
+            <div>
+              <div style="font-weight:700">Maths - Mock Test 1</div>
+              <div class="meta">10 questions • 10 mins</div>
+            </div>
+            <div><button class="btn" onclick="openQuiz('quiz-math-1.html')">Start</button></div>
+          </div>
+
+          <div class="list-item">
+            <div>
+              <div style="font-weight:700">Science - Chapter Test</div>
+              <div class="meta">20 questions • 20 mins</div>
+            </div>
+            <div><button class="btn" onclick="openQuiz('quiz-science-1.html')">Start</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="profile" class="screen" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="margin:0">Profile</h3>
+        <div style="color:var(--muted);font-size:13px">Student</div>
+      </div>
+
+      <div class="panel">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div style="width:74px;height:74px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#0066ff);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px">JG</div>
+          <div>
+            <div style="font-weight:700">J. Galla</div>
+            <div style="color:var(--muted);font-size:13px">Vijayawada • Teacher</div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <div class="card" style="flex:1;min-width:160px">
+              <div style="font-weight:700">Batches</div>
+              <div style="color:var(--muted);font-size:13px;margin-top:6px">3 active</div>
+            </div>
+            <div class="card" style="flex:1;min-width:160px">
+              <div style="font-weight:700">Assignments</div>
+              <div style="color:var(--muted);font-size:13px;margin-top:6px">12 pending</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- VIEWER POPUP -->
+  <div id="viewerOverlay" class="viewer-overlay" onclick="closeViewer(event)">
+    <div class="viewer" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+      <div class="v-header">
+        <div id="viewerTitle" style="font-weight:700">Viewer</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="btn" onclick="closeViewer()">Close</div>
+        </div>
+      </div>
+      <iframe id="viewerFrame" src=""></iframe>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <div class="tab active" data-target="home" onclick="switchTab(event,'home')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 11.5L12 4l9 7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Home
+    </div>
+    <div class="tab" data-target="courses" onclick="switchTab(event,'courses')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M21 8V6l-9-4-9 4v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Courses
+    </div>
+    <div class="tab" data-target="content" onclick="switchTab(event,'content')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Content
+    </div>
+    <div class="tab" data-target="tests" onclick="switchTab(event,'tests')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Tests
+    </div>
+    <div class="tab" data-target="profile" onclick="switchTab(event,'profile')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Profile
+    </div>
+  </nav>
+
+</div>
+
+<script>
+/* SPA navigation */
+function switchTab(e, id){
+  document.querySelectorAll('.bottom-nav .tab').forEach(t=>t.classList.remove('active'));
+  e.currentTarget.classList.add('active');
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+  document.getElementById(id).style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* simple goTo helper */
+function goTo(id,sub){
+  // set subtitle if courses called
+  if(id==='courses' && sub) document.getElementById('coursesSub').innerText = (sub==='model'?'Model Papers': sub==='previous'?'Previous Papers':'Textbooks');
+  // set active bottom tab accordingly
+  document.querySelectorAll('.bottom-nav .tab').forEach(t=>t.classList.remove('active'));
+  const map={'home':'home','courses':'courses','content':'content','tests':'tests','profile':'profile'};
+  document.querySelector('.bottom-nav .tab[data-target="'+map[id]+'"]').classList.add('active');
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+  document.getElementById(id).style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* Live placeholder */
+function openLive(){
+  alert('Open Live Classes - (integrate video/zoom link here).');
+}
+
+/* CLASS selection */
+function openClass(cls){
+  // populate course content area with sample PDF entries
+  const target = document.getElementById('courseContent');
+  target.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px">
+      <div class="list-item"><div><div style="font-weight:700">Class ${cls} - Maths Notes</div><div class="meta">Chapter wise notes</div></div><div><button class="btn" onclick="openDrivePDF('sample-id-1')">Open</button></div></div>
+      <div class="list-item"><div><div style="font-weight:700">Class ${cls} - Model Paper</div><div class="meta">Model Paper PDF</div></div><div><button class="btn" onclick="openDrivePDF('sample-id-2')">Open</button></div></div>
+    </div>`;
+  goTo('courses');
+}
+
+/* CONTENT list population */
+const sampleContent = [
+  {title:'Maths - Chapter 5 Notes', meta:'Class 10 • 12 pages', id:'1a2b3c4d'},
+  {title:'Physics - Model Paper', meta:'Class 12 • 8 pages', id:'2b3c4d5e'},
+  {title:'Chemistry - Important Formulas', meta:'Class 11 • 6 pages', id:'3c4d5e6f'}
+];
+(function populateContent(){
+  const list = document.getElementById('contentList');
+  sampleContent.forEach(it=>{
+    const el = document.createElement('div');
+    el.className = 'list-item';
+    el.innerHTML = `<div><div style="font-weight:700">${it.title}</div><div class="meta">${it.meta}</div></div>
+      <div><button class="btn" onclick="openDrivePDF('${it.id}')">Open</button></div>`;
+    list.appendChild(el);
+  });
+})();
+
+/* VIEWER logic - supports drive file id or full url /d/<id>/view */
+function openDrivePDF(driveInput){
+  // If input looks like an id (no slashes) use it directly, otherwise extract id
+  let id = extractDriveID(driveInput);
+  if(!id) id = driveInput;
+  const preview = 'https://drive.google.com/file/d/' + id + '/preview';
+  openViewer(preview, 'PDF Preview');
+}
+
+/* Try to extract google drive id from many common formats */
+function extractDriveID(url){
+  if(!url) return '';
+  // if plain id (no slash) return empty to allow direct use
+  if(!url.includes('/')) return url;
+  // match /d/ID/
+  let m = url.match(/\/d\/([a-zA-Z0-9_\-]+)(?:\/|$)/);
+  if(m) return m[1];
+  // match id=...
+  m = url.match(/[?&]id=([a-zA-Z0-9_\-]+)/);
+  if(m) return m[1];
+  // last resort: googleusercontent url segment
+  m = url.match(/\/([a-zA-Z0-9_\-]{20,})/);
+  return m?m[1]:'';
+}
+
+/* Open tests / quiz inside viewer (iframe) */
+function openQuiz(path){
+  // path should be a relative HTML file in same folder (quiz1.html etc.)
+  openViewer(path, 'Quiz');
+}
+
+/* Open viewer helper */
+function openViewer(src, title){
+  const overlay = document.getElementById('viewerOverlay');
+  const frame = document.getElementById('viewerFrame');
+  document.getElementById('viewerTitle').innerText = title;
+  frame.src = src;
+  overlay.style.display = 'flex';
+  // prevent background scroll
+  document.body.style.overflow = 'hidden';
+}
+
+/* close viewer */
+function closeViewer(e){
+  if(e && e.target && e.target.id!=='viewerOverlay') return;
+  document.getElementById('viewerOverlay').style.display = 'none';
+  document.getElementById('viewerFrame').src = '';
+  document.body.style.overflow = '';
+}
+
+/* clicking on overlay or close button both call closeViewer */
+document.querySelector('#viewerOverlay').addEventListener('click', function(ev){
+  if(ev.target === this) closeViewer(ev);
+});
+
+/* convenience: open sample quiz or sample pdf via viewer from anywhere */
+window.openQuiz = openQuiz;
+window.openDrivePDF = openDrivePDF;
+
+/* keyboard escape to close viewer */
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeViewer();
+});
+</script>
+</body>
+</html>
