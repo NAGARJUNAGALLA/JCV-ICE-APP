@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>JCV ClassPlus - Old UI (SPA)</title>
+<title>JCV ClassPlus - Final SPA</title>
 <style>
   :root{
-    --primary:#0d47a1; /* ClassPlus blue */
+    --primary:#0d47a1;
     --primary-dark:#083375;
     --muted:#6b7280;
     --card-radius:18px;
@@ -18,7 +18,6 @@
     background:#f3f5f8;
     color:#111827;
     -webkit-font-smoothing:antialiased;
-    -moz-osx-font-smoothing:grayscale;
   }
 
   /* TOP BAR */
@@ -49,9 +48,9 @@
 
   /* SIDE DRAWER */
   .sidedrawer{
-    position:fixed; left:-280px; top:0; bottom:0; width:280px;
+    position:fixed; left:-300px; top:0; bottom:0; width:300px;
     background:#0b1220; color:#fff; padding-top:70px;
-    transition:left .30s cubic-bezier(.2,.9,.3,1);
+    transition:left .28s cubic-bezier(.2,.9,.3,1);
     z-index:1500;
   }
   .sidedrawer.open{left:0}
@@ -64,16 +63,16 @@
   }
   .sidedrawer a:hover{background:rgba(255,255,255,0.03)}
 
-  /* MAIN PAGES */
+  /* APP CONTENT */
   .app {
     padding-top:70px;
-    padding-bottom:88px; /* space for bottom nav */
+    padding-bottom:88px;
     min-height:100vh;
   }
   .page{display:none;padding:14px}
   .page.active{display:block}
 
-  /* Home Grid - big rounded cards */
+  /* HOME GRID - big rounded cards */
   .home-grid{
     display:grid;
     grid-template-columns:repeat(2,1fr);
@@ -105,7 +104,7 @@
     font-weight:700;
   }
 
-  /* Class buttons list */
+  /* Class buttons grid */
   .classes-grid{
     display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
   }
@@ -114,7 +113,7 @@
     box-shadow:0 6px 16px rgba(13,71,161,0.05);cursor:pointer;border:1px solid rgba(13,71,161,0.04)
   }
 
-  /* PDF list */
+  /* PDF list style */
   .pdf-list{display:flex;flex-direction:column;gap:10px}
   .pdf-item{
     background:#fff;padding:12px;border-radius:10px;display:flex;align-items:center;justify-content:space-between;
@@ -128,10 +127,9 @@
   .pdf-title{font-weight:700}
   .pdf-sub{color:var(--muted);font-size:13px}
 
-  /* small helpers */
   .muted{color:var(--muted)}
 
-  /* POPUP - PDF / QUIZ VIEWER */
+  /* OVERLAY VIEWER */
   .overlay{
     position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(15,23,42,0.6);display:none;
     align-items:center;justify-content:center;z-index:2000;padding:12px;
@@ -151,11 +149,9 @@
     position:fixed;left:0;right:0;bottom:0;height:68px;background:#fff;border-top:1px solid rgba(0,0,0,0.06);
     display:flex;align-items:center;justify-content:space-around;z-index:1300;
   }
-  .nav-item{display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--muted);cursor:pointer}
+  .nav-item{display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--muted);cursor:pointer;padding:6px 8px}
   .nav-item.active{color:var(--primary);font-weight:700}
-  .nav-item svg{margin-bottom:4px}
 
-  /* Responsive tweaks */
   @media (max-width:600px){
     .classes-grid{grid-template-columns:repeat(2,1fr)}
     .home-grid{grid-template-columns:repeat(2,1fr)}
@@ -168,7 +164,6 @@
   <div class="topbar">
     <div class="hamburger" id="hambtn" title="Menu">☰</div>
     <div class="app-title">JCV Academy</div>
-    <div style="width:8px"></div>
     <div class="top-actions">
       <button id="searchBtn" title="Search">🔍</button>
       <button id="notifyBtn" title="Notifications">🔔</button>
@@ -181,13 +176,12 @@
       <div style="font-weight:800;font-size:16px">JCV Academy</div>
       <div style="font-size:13px;color:#c7d7ff;margin-top:6px">Ashok Nagar, Vijayawada</div>
     </div>
-    <a href="#" onclick="navTo('home')">🏠 Home</a>
     <a href="#" onclick="openSection('textbooks')">📘 Textbooks</a>
     <a href="#" onclick="openSection('previous')">📚 Previous Papers</a>
     <a href="#" onclick="openSection('model')">🗂️ Model Papers</a>
-    <a href="#" onclick="openSection('tests')">📝 Online Tests</a>
-    <a href="#" onclick="navTo('profile')">👤 Profile</a>
-    <a href="#" onclick="navTo('about')">ℹ️ About</a>
+    <a href="#" onclick="showPage('tests')">📝 Online Tests</a>
+    <a href="#" onclick="showPage('profile')">👤 Profile</a>
+    <a href="#" onclick="showPage('about')">ℹ️ About</a>
   </nav>
 
   <!-- APP CONTENT -->
@@ -223,14 +217,14 @@
           <div class="subtitle">Practice with model sets</div>
         </div>
 
-        <div class="home-card" onclick="openSection('tests')">
+        <div class="home-card" onclick="showPage('tests')">
           <div class="title">Online Tests</div>
           <div class="subtitle">Quizzes & timed exams</div>
         </div>
       </div>
     </section>
 
-    <!-- CLASSES PAGE (used by Textbooks / Previous / Model) -->
+    <!-- CLASSES PAGE -->
     <section id="classes" class="page">
       <div class="section-header">
         <button class="back-btn" onclick="navTo('home')">← Home</button>
@@ -265,7 +259,7 @@
       </div>
 
       <div class="pdf-list" id="pdfItems" style="margin-top:10px">
-        <!-- populated dynamically -->
+        <!-- dynamically filled -->
       </div>
     </section>
 
@@ -279,25 +273,12 @@
         </div>
       </div>
 
-      <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
-        <div class="pdf-item" onclick="openViewer('quiz1.html','Quiz 1 - Algebra')">
-          <div class="meta"><div class="pdf-icon">Q1</div><div><div class="pdf-title">Quiz 1 - Algebra</div><div class="pdf-sub">10 MCQs · 10 min</div></div></div>
-          <div class="muted">Start</div>
-        </div>
-
-        <div class="pdf-item" onclick="openViewer('quiz2.html','Quiz 2 - Geometry')">
-          <div class="meta"><div class="pdf-icon">Q2</div><div><div class="pdf-title">Quiz 2 - Geometry</div><div class="pdf-sub">15 MCQs · 15 min</div></div></div>
-          <div class="muted">Start</div>
-        </div>
-
-        <div class="pdf-item" onclick="openViewer('quiz3.html','Quiz 3 - Science')">
-          <div class="meta"><div class="pdf-icon">Q3</div><div><div class="pdf-title">Quiz 3 - Science</div><div class="pdf-sub">20 MCQs · 20 min</div></div></div>
-          <div class="muted">Start</div>
-        </div>
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px" id="quizList">
+        <!-- quizzes are injected here -->
       </div>
     </section>
 
-    <!-- PROFILE & ABOUT (simple placeholders) -->
+    <!-- PROFILE -->
     <section id="profile" class="page">
       <div class="section-header">
         <button class="back-btn" onclick="navTo('home')">← Home</button>
@@ -307,6 +288,7 @@
       <div class="card" style="margin:12px 0">Centre: JCV Tuition Centre</div>
     </section>
 
+    <!-- ABOUT -->
     <section id="about" class="page">
       <div class="section-header">
         <button class="back-btn" onclick="navTo('home')">← Home</button>
@@ -323,8 +305,8 @@
       <div class="vtop">
         <div class="title" id="viewerTitle">Document</div>
         <div>
-          <button style="background:#efefef;border:0;padding:8px 12px;border-radius:8px;margin-right:8px;cursor:pointer"
-                  onclick="downloadCurrent()">Download</button>
+          <button id="openNew" style="background:#efefef;border:0;padding:8px 12px;border-radius:8px;margin-right:8px;cursor:pointer" title="Open in new tab">Open</button>
+          <button id="downloadBtn" style="background:#efefef;border:0;padding:8px 12px;border-radius:8px;margin-right:8px;cursor:pointer" title="Download">Download</button>
           <button style="background:#ef4444;color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer" onclick="closeViewer()">Close</button>
         </div>
       </div>
@@ -337,169 +319,185 @@
   <!-- BOTTOM NAV -->
   <div class="bottom-nav">
     <div class="nav-item active" id="navHome" onclick="navTo('home')">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 11.5L12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V11.5z" fill="currentColor"/></svg>
-      Home
+      <div style="font-size:18px">🏠</div>
+      <div style="font-size:12px">Home</div>
     </div>
     <div class="nav-item" id="navBooks" onclick="openSection('textbooks')">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 5a2 2 0 0 1 2-2h11v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5z" fill="currentColor"/></svg>
-      Textbooks
+      <div style="font-size:18px">📘</div>
+      <div style="font-size:12px">Textbooks</div>
     </div>
-    <div class="nav-item" id="navTests" onclick="openSection('tests')">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 6h16v2H4zM4 11h10v2H4zM4 16h7v2H4z" fill="currentColor"/></svg>
-      Tests
+    <div class="nav-item" id="navTests" onclick="showPage('tests')">
+      <div style="font-size:18px">📝</div>
+      <div style="font-size:12px">Tests</div>
     </div>
     <div class="nav-item" id="navMore" onclick="navTo('profile')">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" fill="currentColor"/><path d="M4 20c0-3.3 2.7-6 6-6h4c3.3 0 6 2.7 6 6" fill="currentColor"/></svg>
-      More
+      <div style="font-size:18px">👤</div>
+      <div style="font-size:12px">More</div>
     </div>
   </div>
 
 <script>
-  // App state
-  let currentSection = 'home';
-  let currentMode = 'textbooks'; // textbooks | previous | model
-  let currentClass = null;
-  let currentDocUrl = '';
+/* ---------- SAMPLE DATA ----------
+ Replace driveId placeholders with your real Google Drive file IDs.
+ For quizzes, place quiz HTML files in same folder (quiz1.html etc).
+-----------------------------------*/
+const DATA = {
+  textbooks: {
+    6: [
+      { title: "Maths Textbook - Class 6", driveId: "1AaBbCcDdEeF1" },
+      { title: "Science Textbook - Class 6", driveId: "1AaBbCcDdEeF2" }
+    ],
+    7: [
+      { title: "Maths Textbook - Class 7", driveId: "1BbCcDdEeFf3" }
+    ],
+    10: [
+      { title: "Maths Textbook - Class 10", driveId: "1ZZaaYYbbCC" }
+    ]
+  },
+  previous: {
+    10: [
+      { title: "AP SSC 2025 - Maths", driveId: "1PREV2025MATH" },
+      { title: "AP SSC 2024 - Science", driveId: "1PREV2024SCI" }
+    ]
+  },
+  model: {
+    9: [
+      { title: "Model Paper 9 - Set A", driveId: "1MEMTz5VCXePQbonQC0hsvegc3BgjcsWb" }
+    ]
+  },
+  quizzes: [
+    { title: "Quiz 1 — Algebra", file: "quiz1.html", info: "10 MCQs · 10 min" },
+    { title: "Quiz 2 — Geometry", file: "quiz2.html", info: "15 MCQs · 15 min" },
+    { title: "Quiz 3 — Science", file: "quiz3.html", info: "20 MCQs · 20 min" }
+  ]
+};
 
-  // Sample data mapping: section -> class -> [ {title, id (drive id), fileName} ]
-  // Replace driveId placeholders with your real file IDs.
-  const DATA = {
-    textbooks: {
-      6: [
-        { title: "Maths Textbook Class 6", driveId: "1AaBbCcDdEeF1" },
-        { title: "Science Textbook Class 6", driveId: "1AaBbCcDdEeF2" }
-      ],
-      7: [
-        { title: "Maths Textbook Class 7", driveId: "1BbCcDdEeFf3" }
-      ],
-      10: [
-        { title: "Maths Textbook Class 10", driveId: "1ZZaaYYbbCC" }
-      ]
-    },
-    previous: {
-      10: [
-        { title: "AP SSC 2025 - Maths", driveId: "1PREV2025MATH" },
-        { title: "AP SSC 2024 - Science", driveId: "1PREV2024SCI" }
-      ]
-    },
-    model: {
-      9: [
-        { title: "Model Paper 9 - Set A", driveId: "1MODEL9A" }
-      ]
-    }
-  };
+/* App state */
+let currentMode = 'textbooks'; // textbooks | previous | model
+let currentClass = null;
+let currentDoc = '';
 
-  // Drawer toggle
-  const drawer = document.getElementById('drawer');
-  document.getElementById('hambtn').addEventListener('click', ()=>{
-    drawer.classList.toggle('open');
+/* Drawer toggle */
+const drawer = document.getElementById('drawer');
+document.getElementById('hambtn').addEventListener('click', ()=> drawer.classList.toggle('open'));
+
+/* Navigation helpers */
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(id);
+  if(el) el.classList.add('active');
+  updateBottomNav(id);
+  // close drawer
+  drawer.classList.remove('open');
+}
+
+function navTo(page) {
+  showPage(page);
+  window.scrollTo(0,0);
+}
+
+/* Open a top-level section (textbooks / previous / model) */
+function openSection(section){
+  currentMode = section;
+  const title = section === 'textbooks' ? 'Textbooks' : section === 'previous' ? 'Previous Papers' : 'Model Papers';
+  document.getElementById('classesTitle').innerText = title + ' — Select Class';
+  document.getElementById('classesSubtitle').innerText = 'Pick a class to view ' + (section === 'textbooks' ? 'textbooks' : section === 'previous' ? 'previous papers' : 'model papers');
+  showPage('classes');
+  // highlight bottom nav
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('navBooks').classList.add('active');
+}
+
+/* Populate PDF list for selected class */
+function openPdfList(classNumber){
+  currentClass = classNumber;
+  const title = `Class ${classNumber} — ` + (currentMode === 'textbooks' ? 'Textbooks' : currentMode === 'previous' ? 'Previous Papers' : 'Model Papers');
+  document.getElementById('pdfListTitle').innerText = title;
+  const itemsWrap = document.getElementById('pdfItems');
+  itemsWrap.innerHTML = '';
+  const list = (DATA[currentMode] && DATA[currentMode][classNumber]) ? DATA[currentMode][classNumber] : [];
+  if(list.length === 0){
+    itemsWrap.innerHTML = `<div class="card" style="margin:6px 0">No files found for Class ${classNumber} in '${currentMode}'. Add Google Drive IDs in DATA.</div>`;
+  } else {
+    list.forEach(doc=>{
+      const div = document.createElement('div');
+      div.className = 'pdf-item';
+      div.innerHTML = `<div class="meta"><div class="pdf-icon">PDF</div><div><div class="pdf-title">${escapeHtml(doc.title)}</div><div class="pdf-sub">Google Drive file</div></div></div><div class="muted">Open</div>`;
+      div.addEventListener('click', ()=> openViewerFromDrive(doc.driveId, doc.title));
+      itemsWrap.appendChild(div);
+    });
+  }
+  showPage('pdfList');
+  window.scrollTo(0,0);
+}
+
+/* Populate Quiz list */
+function populateQuizzes(){
+  const wrap = document.getElementById('quizList');
+  wrap.innerHTML = '';
+  if(!DATA.quizzes || DATA.quizzes.length===0){
+    wrap.innerHTML = '<div class="card">No quizzes available. Add entries to DATA.quizzes.</div>';
+    return;
+  }
+  DATA.quizzes.forEach(q=>{
+    const div = document.createElement('div');
+    div.className = 'pdf-item';
+    div.innerHTML = `<div class="meta"><div class="pdf-icon">Q</div><div><div class="pdf-title">${escapeHtml(q.title)}</div><div class="pdf-sub">${escapeHtml(q.info || '')}</div></div></div><div class="muted">Start</div>`;
+    div.addEventListener('click', ()=> openViewer(q.file, q.title));
+    wrap.appendChild(div);
   });
+}
 
-  // Navigation helpers
-  function showPage(id){
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const el = document.getElementById(id);
-    if(el) el.classList.add('active');
-    // update bottom nav active
-    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-    if(id === 'home') document.getElementById('navHome').classList.add('active');
-    else if(id === 'tests') document.getElementById('navTests').classList.add('active');
-    else if(id === 'profile' || id === 'about') document.getElementById('navMore').classList.add('active');
+/* Viewer helpers */
+function openViewerFromDrive(driveId, title){
+  const url = `https://drive.google.com/file/d/${encodeURIComponent(driveId)}/preview`;
+  openViewer(url, title);
+}
+function openViewer(url, title='Document'){
+  currentDoc = url;
+  document.getElementById('viewerTitle').innerText = title;
+  // If it's a relative file like quiz1.html it will open in iframe. For other links, iframe also tries.
+  document.getElementById('viewerFrame').src = url;
+  document.getElementById('overlay').classList.add('open');
+  // set open & download buttons
+  document.getElementById('openNew').onclick = ()=> window.open(currentDoc, '_blank');
+  document.getElementById('downloadBtn').onclick = ()=> window.open(currentDoc, '_blank');
+}
+
+/* Close viewer */
+function closeViewer(){
+  document.getElementById('viewerFrame').src = '';
+  document.getElementById('overlay').classList.remove('open');
+}
+
+/* small utilities */
+function escapeHtml(s){
+  return String(s || '').replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m] });
+}
+
+/* keyboard close */
+document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeViewer(); });
+
+/* close drawer when clicking outside */
+document.addEventListener('click', function(evt){
+  const drawerEl = document.getElementById('drawer');
+  const hambtn = document.getElementById('hambtn');
+  if(!drawerEl.contains(evt.target) && !hambtn.contains(evt.target)){
+    drawerEl.classList.remove('open');
   }
+});
 
-  function navTo(page){
-    drawer.classList.remove('open');
-    showPage(page);
-    currentSection = page;
-    window.scrollTo(0,0);
-  }
+/* keep bottom nav active highlight */
+function updateBottomNav(pageId){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(pageId === 'home') document.getElementById('navHome').classList.add('active');
+  else if(pageId === 'tests') document.getElementById('navTests').classList.add('active');
+  else document.getElementById('navMore').classList.add('active');
+}
 
-  // Open a top-level section (textbooks, previous, model, tests)
-  function openSection(section){
-    drawer.classList.remove('open');
-    currentMode = section; // used later
-    // show classes page
-    document.getElementById('classesTitle').innerText = (section === 'textbooks' ? 'Textbooks' : section === 'previous' ? 'Previous Papers' : 'Model Papers') + ' — Select Class';
-    document.getElementById('classesSubtitle').innerText = 'Pick a class to view ' + (section === 'textbooks' ? 'textbooks' : section === 'previous' ? 'previous papers' : 'model papers');
-    showPage('classes');
-    // bottom nav highlight
-    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-    document.getElementById('navBooks').classList.add('active');
-  }
-
-  // Open PDF list for selected class
-  function openPdfList(classNumber){
-    currentClass = classNumber;
-    const title = `Class ${classNumber} — ` + (currentMode === 'textbooks' ? 'Textbooks' : currentMode === 'previous' ? 'Previous Papers' : 'Model Papers');
-    document.getElementById('pdfListTitle').innerText = title;
-    const itemsWrap = document.getElementById('pdfItems');
-    itemsWrap.innerHTML = '';
-    // fetch data
-    const list = (DATA[currentMode] && DATA[currentMode][classNumber]) ? DATA[currentMode][classNumber] : [];
-    if(list.length === 0){
-      itemsWrap.innerHTML = `<div class="card" style="margin:6px 0">No files found for Class ${classNumber} in '${currentMode}'. You can add Google Drive IDs in DATA variable.</div>`;
-    } else {
-      list.forEach(doc=>{
-        const div = document.createElement('div');
-        div.className = 'pdf-item';
-        div.innerHTML = `<div class="meta"><div class="pdf-icon">PDF</div><div><div class="pdf-title">${escapeHtml(doc.title)}</div><div class="pdf-sub">Google Drive file</div></div></div><div class="muted">Open</div>`;
-        div.addEventListener('click', ()=> openViewerFromDrive(doc.driveId, doc.title));
-        itemsWrap.appendChild(div);
-      });
-    }
-    showPage('pdfList');
-    window.scrollTo(0,0);
-  }
-
-  // Open viewer with Google Drive file id
-  function openViewerFromDrive(driveId, title){
-    // Google Drive preview URL pattern:
-    // https://drive.google.com/file/d/DRIVE_ID/preview
-    const url = `https://drive.google.com/file/d/${encodeURIComponent(driveId)}/preview`;
-    openViewer(url, title, true);
-  }
-
-  // Open viewer for arbitrary URL / quiz HTML
-  function openViewer(url, title = 'Document', isDrive = false){
-    currentDocUrl = url;
-    document.getElementById('viewerTitle').innerText = title;
-    // If it's a direct PDF (http(s) link to pdf), we can use Google Drive viewerng or pdf.js. For simplicity, we load into iframe.
-    // For Google Drive preview we get a proper preview with /preview.
-    document.getElementById('viewerFrame').src = url;
-    document.getElementById('overlay').classList.add('open');
-  }
-
-  function closeViewer(){
-    document.getElementById('viewerFrame').src = '';
-    document.getElementById('overlay').classList.remove('open');
-  }
-
-  function downloadCurrent(){
-    // attempt open in new tab for download
-    if(!currentDocUrl) return;
-    window.open(currentDocUrl, '_blank');
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]});
-  }
-
-  // quick keyboard close
-  document.addEventListener('keydown', (e)=>{
-    if(e.key === 'Escape') closeViewer();
-  });
-
-  // initial nav highlight
-  showPage('home');
-
-  // Small UX: close drawer when clicking outside on content
-  document.addEventListener('click', function(evt){
-    const drawerEl = document.getElementById('drawer');
-    const hambtn = document.getElementById('hambtn');
-    if(!drawerEl.contains(evt.target) && !hambtn.contains(evt.target)){
-      drawerEl.classList.remove('open');
-    }
-  });
+/* small initializations */
+showPage('home');
+populateQuizzes();
 
 </script>
 </body>
