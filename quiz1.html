@@ -79,13 +79,37 @@ html, body {
 .correct { border-color: green !important; background: #e8fce8 !important; }
 .wrong { border-color: red !important; background: #ffe8e8 !important; }
 
-/* Foot */
+/* FOOTER */
 .quiz-footer {
-  position: fixed; bottom: 0; left: 0; right:0;
-  background: #1b4332;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right:0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  background-color: #1b4332;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+  border-top: 1px solid #ddd;
   padding: 10px;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
 }
-.quiz-footer button { background:white; border:none; padding:10px; border-radius:25px; }
+.quiz-footer button {
+  flex: 1;
+  background:white;
+  color: #1b4332;
+  border: none;
+  padding: 10px;
+  border-radius: 25px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.3s;
+  margin: 0 5px;
+}
+.quiz
 
 /* Option Buttons */
 .options label {
