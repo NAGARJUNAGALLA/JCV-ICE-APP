@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title></title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<!-- MathJax -->
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+  options: { renderActions: { addMenu: [] } },
+  startup: { typeset: false }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+
+<style>
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #f8f8f8;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.quiz-container {
+  position: absolute;
+  top: 30px;
+  bottom: 20px;
+  left: -10px;
+  right: 0;
+  overflow-y: auto;
+  background: #fff;
+  height:80vh;
+}
+
+/* HEADER */
+.quiz-header {
+  background-color: #1b4332;
+  background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  font-weight: 600;
+  font-size: 18px;
+  position: fixed;
+  top: 0;
+  left:0;
+  right:0;
+  z-index: 10;
+}
+
+/* BODY */
+.quiz-body { padding: 20px 20px 10px; }
+.stats { display: flex; justify-content: space-between; margin-bottom: 10px; }
+
+.toggle-nav-btn {
+  width: 100%;
+  background: #1b4332;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.question-nav { display:flex; flex-wrap:nowrap;overflow-x:auto; gap:10px; }
+.question-nav button { 
+  width:36px; height:36px; border-radius:50%; background:#eee; border:1px solid #ccc; 
+}
+
+.correct { border-color: green !important; background: #e8fce8 !important; }
+.wrong { border-color: red !important; background: #ffe8e8 !important; }
+
+/* Foot */
+.quiz-footer {
+  position: fixed; bottom: 0; left: 0; right:0;
+  background: #1b4332;
+  padding: 10px;
+}
+.quiz-footer button { background:white; border:none; padding:10px; border-radius:25px; }
+
+/* Option Buttons */
+.options label {
+  display: block;
+  background: #f2f2f2;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+.options label input {
+  display: none;
+}
+
+.options label.selected {
+  background: #d0e7ff;
+  border-color: #4da3ff;
+}
+
+.options label.correct {
+  background: #e7ffe7 !important;
+  border-color: green !important;
+}
+
+.options label.wrong {
+  background: #ffe7e7 !important;
+  border-color: red !important;
+}
+
+.options label.disabled {
+  pointer-events: none;
+  opacity: 0.7;
+}
+</style>
+</head>
+<body>
+
+<!-- MOBILE LOGIN -->
+<div id="login-form" style="text-align:center; margin-top:100px;">
+  <h2>Login</h2>
+  <input type="text" id="mobileInput" placeholder="Enter Mobile Number"
+         style="padding:10px; width:80%; max-width:300px; border-radius:8px; border:1px solid #ccc;">
+  <br><br>
+  <button onclick="validateMobile()" 
+          style="background:#1b4332; color:white; padding:10px 20px; border:none; border-radius:8px;">
+    Continue
+  </button>
+  <div id="mobileError" style="color:red; font-size:14px; margin-top:5px;"></div>
+</div>
+
+<!-- NAME INPUT -->
+<div id="user-form" style="display:none; text-align:center; margin-top:80px;">
+  <h3>Enter your Name</h3>
+  <input type="text" id="userName" placeholder="Enter Full Name"
+         style="padding:10px; width:80%; max-width:300px; border-radius:8px; border:1px solid #ccc;">
+  <br><br>
+  <button onclick="startQuiz()" 
+          style="background:#1b4332; color:white; padding:10px 20px; border:none; border-radius:8px;">
+    Start Quiz
+  </button>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz-area" style="display:none;">
+<div class="quiz-container">
+
+  <div class="quiz-header">
+    <div id="quiz-title">Quiz</div>
+    <div>⏱️ <span id="timer"></span></div>
+    <i class="fa-solid fa-expand" onclick="toggleFullscreen()"></i>
+  </div>
+
+  <div class="quiz-body">
+    <div class="stats">
+      <span id="answered"></span>
+      <span id="not-answered"></span>
+    </div>
+
+    <button class="toggle-nav-btn" onclick="toggleNav()">🔽 Show/Hide Questions</button>
+    <div class="question-nav" id="question-nav"></div>
+
+    <div id="question-container"></div>
+    <div id="result-section"></div>
+  </div>
+
+  <div class="quiz-footer">
+    <button onclick="prevQuestion()">Previous</button>
+    <button onclick="submitQuiz()">Submit</button>
+    <button onclick="nextQuestion()">Next</button>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ----------------------------
+// MOBILE LOGIN
+// ----------------------------
+const VALID_MOBILES = ["6301186741", "9876543210", "9999999999"];
+let userMobile = "";
+
+function validateMobile(){
+  const m = document.getElementById("mobileInput").value.trim();
+  const errorDiv = document.getElementById("mobileError");
+
+  if(!VALID_MOBILES.includes(m)){
+    errorDiv.textContent = "Mobile number not registered!"; // show below input
+    return;
+  } else {
+    errorDiv.textContent = ""; // clear error if mobile is valid
+  }
+
+  userMobile = m;
+  document.getElementById("login-form").style.display="none";
+  document.getElementById("user-form").style.display="block";
+}
+
+// ----------------------------
+// GOOGLE FORM ENTRY IDs
+// ----------------------------
+const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfVoWZdJJTPQhxRCzPhD7UkbMYt13d1pzeWkm7a8Tvbil1P5A/formResponse";
+
+const ENTRY_MOBILE  = "entry.1096987326";
+const ENTRY_QUIZ    = "entry.1993342463";
+const ENTRY_SCORE   = "entry.1053562570";
+const ENTRY_CORRECT = "entry.1154826868";
+const ENTRY_WRONG   = "entry.1442969806";
+const ENTRY_SKIP    = "entry.770173959";
+
+const QUIZ_TITLE = "REFLECTION AND REFRACTION";
+
+// ----------------------------
+// QUESTIONS
+// ----------------------------
+const questions = [
+  {
+    "q": "Which phenomenon explains why a pencil appears bent when placed in water? \u003Cbr\u003E నీటిలో పెట్టిన పెన్సిల్ వంకరగా కనిపించడం ఏమి కారణం?",
+    "options": [
+      "Reflection",
+      "Refraction",
+      "Diffraction",
+      "Dispersion"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "Which type of mirror is used in vehicle rear-view mirrors? \u003Cbr\u003E వాహనాల రియర్ వ్యూ మిర్రర్లలో ఏ రకమైన అద్దం ఉపయోగిస్తారు?",
+    "options": [
+      "Concave mirror",
+      "Convex mirror",
+      "Plane mirror",
+      "Parabolic mirror"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "The image formed by a plane mirror is always: \u003Cbr\u003E సాదాసీదా అద్దం ద్వారా ఏర్పడిన చిత్రం ఎల్లప్పుడూ ఎలా ఉంటుంది?",
+    "options": [
+      "Real and inverted",
+      "Virtual and upright",
+      "Real and upright",
+      "Virtual and inverted"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "The focal length of a concave mirror is: \u003Cbr\u003E ఒక వంకర అద్దం యొక్క ఫోకల్ పొడవు ఎంత ఉంటుంది?",
+    "options": [
+      "Half of the radius of curvature",
+      "Double the radius of curvature",
+      "Equal to radius of curvature",
+      "Zero"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "Which mirror can produce an image larger than the object? \u003Cbr\u003E ఏ అద్దం వస్తువు కంటే పెద్ద చిత్రం ఏర్పరచగలదు?",
+    "options": [
+      "Plane mirror",
+      "Convex mirror",
+      "Concave mirror",
+      "None of the above"
+    ],
+    "answerId": 2
+  },
+  {
+    "q": "What is the angle of incidence when a ray strikes a plane mirror perpendicularly? \u003Cbr\u003E ఒక రేఖ సాదాసీదా అద్దానికి నిలువుగా పడినప్పుడు ప్రవేశ కోణం ఎంత ఉంటుంది?",
+    "options": [
+      "0°",
+      "45°",
+      "90°",
+      "30°"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "The rainbow is formed due to: \u003Cbr\u003E వానరం చక్రం (Rainbow) ఎందుకు ఏర్పడుతుంది?",
+    "options": [
+      "Reflection only",
+      "Refraction and dispersion",
+      "Diffraction",
+      "Interference"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "If the object is at the focus of a concave mirror, the image formed is: \u003Cbr\u003E ఒక వస్తువు వంకర అద్దం ఫోకస్ వద్ద ఉంటే, చిత్రం ఎలా ఏర్పడుతుంది?",
+    "options": [
+      "At infinity",
+      "At the center of curvature",
+      "At the object itself",
+      "No image is formed"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "Convex mirrors always produce images that are: \u003Cbr\u003E వక్రమ్ అద్దాలు ఎల్లప్పుడూ ఇలా చిత్రాలను ఉత్పత్తి చేస్తాయి:",
+    "options": [
+      "Real and inverted",
+      "Virtual and upright",
+      "Real and upright",
+      "Magnified"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "The angle between the incident ray and the reflected ray is called: \u003Cbr\u003E ప్రవేశ రేఖ మరియు ప్రతిబింబ రేఖ మధ్య కోణం ఏమని అంటారు?",
+    "options": [
+      "Angle of incidence",
+      "Angle of reflection",
+      "Angle of deviation",
+      "Angle of refraction"
+    ],
+    "answerId": 2
+  },
+  {
+    "q": "Which of the following is not a property of image formed by plane mirror? \u003Cbr\u003E సాదాసీదా అద్దం ద్వారా ఏర్పడిన చిత్రానికి క్రింది వాటిలో ఏది వర్తించదు?",
+    "options": [
+      "Virtual",
+      "Upright",
+      "Magnified",
+      "Laterally inverted"
+    ],
+    "answerId": 2
+  },
+  {
+    "q": "In a concave mirror, when the object is beyond C (center of curvature), the image formed is: \u003Cbr\u003E ఒక వంకర అద్దంలో, వస్తువు C కన్నా దూరంలో ఉంటే, చిత్రం ఎలా ఉంటుంది?",
+    "options": [
+      "Real, inverted, smaller",
+      "Real, inverted, larger",
+      "Virtual, upright, magnified",
+      "No image"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "The apparent depth of an object in water is less than the real depth due to: \u003Cbr\u003E నీటిలో వస్తువు యొక్క సూచించిన లోతు నిజమైన లోతు కంటే తక్కువగా ఎందుకు కనిపిస్తుంది?",
+    "options": [
+      "Reflection",
+      "Refraction",
+      "Dispersion",
+      "Diffraction"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "The critical angle is defined for: \u003Cbr\u003E క్రిటికల్ కోణం ఏకైకంగా ఎక్కడ నిర్వచించబడుతుంది?",
+    "options": [
+      "Reflection",
+      "Refraction",
+      "Total internal reflection",
+      "Dispersion"
+    ],
+    "answerId": 2
+  },
+  {
+    "q": "The focal length of a convex mirror is always: \u003Cbr\u003E వక్రమ్ అద్దం ఫోకల్ పొడవు ఎల్లప్పుడూ:",
+    "options": [
+      "Positive",
+      "Negative",
+      "Zero",
+      "Infinite"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "If light passes from rarer to denser medium, it bends: \u003Cbr\u003E కాంతి అరుదైన మాధ్యమం నుండి సాంద్ర మాధ్యమంలోకి వెళ్ళినప్పుడు, అది ఎలా వంకరగా మారుతుంది?",
+    "options": [
+      "Away from normal",
+      "Towards normal",
+      "Along the incident ray",
+      "Does not bend"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "Concave mirrors are used in: \u003Cbr\u003E వంకర అద్దాలు ఏవ్వు ఉపయోగిస్తారు?",
+    "options": [
+      "Rear-view mirrors",
+      "Make-up mirrors and headlights",
+      "Magnifying glasses",
+      "Plane mirrors"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "Convex lens and concave mirror both: \u003Cbr\u003E వక్రమ్ లెన్స్ మరియు వంకర అద్దం రెండు:",
+    "options": [
+      "Converge light",
+      "Diverge light",
+      "Do not bend light",
+      "Absorb light"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "A lens forms an erect and diminished image of an object placed at infinity. The lens is: \u003Cbr\u003E వస্তুని ఇన్ఫినిటీ వద్ద ఉంచితే ఎత్తు తగ్గిన చిత్రం ఏర్పడే లెన్స్ ఎటువంటి లెన్స్?",
+    "options": [
+      "Concave lens",
+      "Convex lens",
+      "Plano-convex lens",
+      "None of the above"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "A real image can be formed on a screen. This is possible with: \u003Cbr\u003E నిజమైన చిత్రం స్క్రీన్ మీద ఏర్పడవచ్చు. ఇది ఏ రకమైన అద్దం లేదా లెన్స్ తో సాధ్యమే?",
+    "options": [
+      "Plane mirror",
+      "Convex mirror",
+      "Concave mirror",
+      "None"
+    ],
+    "answerId": 2
+  },
+  {
+    "q": "If the radius of curvature of a concave mirror is 20 cm, its focal length is: \u003Cbr\u003E వంకర అద్దం యొక్క వృత్తాకారం వ్యాసార్థం 20 సం.మీ. అయితే, ఫోకల్ పొడవు ఎంత?",
+    "options": [
+      "10 cm",
+      "20 cm",
+      "40 cm",
+      "5 cm"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "Which color of light bends the most during dispersion through a prism? \u003Cbr\u003E ప్రిజమ్ ద్వారా వెళ్తున్నప్పుడు ఏ రంగు కాంతి ఎక్కువగా వంకర అవుతుంది?",
+    "options": [
+      "Red",
+      "Violet",
+      "Yellow",
+      "Green"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "The lateral inversion of image is observed in: \u003Cbr\u003E వైపున మార్పు (Lateral inversion) ఏ అద్దం ద్వారా కనిపిస్తుంది?",
+    "options": [
+      "Concave mirror",
+      "Plane mirror",
+      "Convex mirror",
+      "None"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "A virtual image can be formed by: \u003Cbr\u003E వర్చువల్ చిత్రం ఏది ఏర్పరచగలదు?",
+    "options": [
+      "Plane mirror",
+      "Concave mirror with object beyond C",
+      "Concave mirror with object at F",
+      "Convex mirror"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "The principal focus of a concave lens is: \u003Cbr\u003E వంకర లెన్స్ యొక్క ప్రిన్సిపల్ ఫోకస్:",
+    "options": [
+      "Real and on same side as object",
+      "Virtual and on opposite side of object",
+      "Real and on opposite side of object",
+      "Virtual and on same side as object"
+    ],
+    "answerId": 3
+  },
+  {
+    "q": "A concave mirror always forms a magnified image when the object is: \u003Cbr\u003E వంకర అద్దం ఎప్పుడూ పెరుగిన చిత్రం చూపిస్తుంది?",
+    "options": [
+      "Beyond C",
+      "Between F and C",
+      "At C",
+      "At F"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "When light travels from glass to air at an angle greater than the critical angle, it undergoes: \u003Cbr\u003E కాంతి గాజు నుండి గాలికి క్రిటికల్ కోణం కంటే ఎక్కువ కోణంలో వెళ్ళినప్పుడు ఏం జరుగుతుంది?",
+    "options": [
+      "Refraction",
+      "Reflection",
+      "Total internal reflection",
+      "Diffraction"
+    ],
+    "answerId": 2
+  },
+  {
+    "q": "Which mirror is used in solar furnaces? \u003Cbr\u003E సౌర ఫర్నేస్ లో ఏ రకమైన అద్దం ఉపయోగిస్తారు?",
+    "options": [
+      "Plane mirror",
+      "Concave mirror",
+      "Convex mirror",
+      "None"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "The distance between pole and focus of a mirror is called: \u003Cbr\u003E అద్దం యొక్క పొల్ మరియు ఫోకస్ మధ్య దూరం ఏమని అంటారు?",
+    "options": [
+      "Radius of curvature",
+      "Focal length",
+      "Principal axis",
+      "None"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "The image of an object placed at center of curvature of a concave mirror is: \u003Cbr\u003E వంకర అద్దం యొక్క C వద్ద ఉంచిన వస్తువు చిత్రం ఎలా ఉంటుంది?",
+    "options": [
+      "Real, inverted, same size",
+      "Virtual, upright, magnified",
+      "Real, inverted, magnified",
+      "No image"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "The mirror formula is given by: \u003Cbr\u003E అద్దం సమీకరణం:",
+    "options": [
+      "1/f = 1/v + 1/u",
+      "f = u + v",
+      "1/f = u - v",
+      "v = u - f"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "The refractive index of a medium is defined as: \u003Cbr\u003E మాధ్యమం యొక్క ప్రతిబింబ సూచిక నిర్వచనం:",
+    "options": [
+      "Speed of light in medium / speed in vacuum",
+      "Speed in vacuum / speed in medium",
+      "Angle of incidence / angle of refraction",
+      "None"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "An image formed by concave mirror at infinity is: \u003Cbr\u003E వంకర అద్దం ద్వారా ఇన్ఫినిటీ వద్ద ఏర్పడిన చిత్రం:",
+    "options": [
+      "At F, highly magnified",
+      "At C, same size",
+      "Virtual and small",
+      "At F, highly diminished"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "Which phenomenon is responsible for the shimmering appearance of objects under water? \u003Cbr\u003E నీటిలో వస్తువులు మెరుపుగా కనిపించడం ఏ కారణం?",
+    "options": [
+      "Reflection",
+      "Refraction",
+      "Dispersion",
+      "Diffraction"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "For a concave mirror, magnification is negative when: \u003Cbr\u003E వంకర అద్దంలో, మాగ్నిఫికేషన్ నెగటివ్ ఎప్పుడు ఉంటుంది?",
+    "options": [
+      "Object beyond C",
+      "Object between F and C",
+      "Object at F",
+      "Object at infinity"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "The phenomenon in which light spreads when passing through a narrow slit is called: \u003Cbr\u003E కాంతి సన్నని చీలిక ద్వారా వెళ్ళినప్పుడు వ్యాప్తి చెందడం ఏమనగా పిలుస్తారు?",
+    "options": [
+      "Reflection",
+      "Refraction",
+      "Diffraction",
+      "Dispersion"
+    ],
+    "answerId": 2
+  },
+  {
+    "q": "A concave mirror produces a magnified, erect image for: \u003Cbr\u003E వంకర అద్దం పెరుగిన, నిలువుగా ఉన్న చిత్రం ఎప్పుడు చూపిస్తుంది?",
+    "options": [
+      "Object at C",
+      "Object between F and C",
+      "Object beyond C",
+      "Object at F"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "When light passes from air to water, it: \u003Cbr\u003E కాంతి గాలి నుండి నీటికి వెళ్ళినప్పుడు, అది:",
+    "options": [
+      "Bends towards normal",
+      "Bends away from normal",
+      "Travels straight",
+      "Gets reflected fully"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "The principal focus of a convex mirror is: \u003Cbr\u003E వక్రమ్ అద్దం యొక్క ప్రిన్సిపల్ ఫోకస్:",
+    "options": [
+      "Real, on same side as object",
+      "Virtual, behind the mirror",
+      "At infinity",
+      "On the object"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "In total internal reflection, the incident ray must travel from: \u003Cbr\u003E టోటల్ ఇంటర్నల్ రిఫ్లెక్షన్ లో, రేఖ ఏ దిశలో ప్రయాణించాలి?",
+    "options": [
+      "Denser to rarer medium",
+      "Rarer to denser medium",
+      "Both ways",
+      "Does not matter"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "The image formed by a convex mirror is always: \u003Cbr\u003E వక్రమ్ అద్దం ద్వారా ఏర్పడిన చిత్రం ఎల్లప్పుడూ:",
+    "options": [
+      "Real and inverted",
+      "Virtual, upright and diminished",
+      "Magnified and real",
+      "At infinity"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "The distance of image from mirror is equal to object distance in case of: \u003Cbr\u003E ఏ సందర్భంలో అద్దం నుండి చిత్రం దూరం వస్తువు దూరానికి సమానం అవుతుంది?",
+    "options": [
+      "Concave mirror at C",
+      "Plane mirror",
+      "Convex mirror",
+      "Concave mirror at F"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "A convex mirror always forms: \u003Cbr\u003E వక్రమ్ అద్దం ఎల్లప్పుడూ:",
+    "options": [
+      "Real, inverted images",
+      "Virtual, erect and diminished images",
+      "Magnified images",
+      "No image"
+    ],
+    "answerId": 1
+  },
+  {
+    "q": "Dispersion of light occurs due to: \u003Cbr\u003E కాంతి విభజన ఎందుకు జరుగుతుంది?",
+    "options": [
+      "Refraction of light",
+      "Reflection of light",
+      "Diffraction of light",
+      "Interference of light"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "The image formed by concave mirror is highly diminished, real and inverted when: \u003Cbr\u003E వంకర అద్దం ద్వారా ఏర్పడిన చిత్రం చిన్నది, నిజమైనది మరియు తలకిందుగా ఉంటుంది:",
+    "options": [
+      "Object beyond C",
+      "Object at C",
+      "Object between F and C",
+      "Object at F"
+    ],
+    "answerId": 0
+  },
+  {
+    "q": "Which mirror is used in shaving or makeup mirrors? \u003Cbr\u003E మేకప్ లేదా షేవింగ్ మిర్రర్లలో ఏ రకమైన అద్దం ఉపయోగిస్తారు?",
+    "options": [
+      "Convex mirror",
+      "Concave mirror",
+      "Plane mirror",
+      "Parabolic mirror"
+    ],
+    "answerId": 1
+  }     
+];
+
+let current=0;
+let answers=Array(questions.length).fill(null);
+let submitted=false;
+let timeLeft=questions.length*60;
+let timerInterval;
+
+// ----------------------------
+// QUIZ START
+// ----------------------------
+function startQuiz(){
+  const name=document.getElementById("userName").value.trim();
+  if(!name){alert("Enter name");return;}
+
+  document.getElementById("user-form").style.display="none";
+  document.getElementById("quiz-area").style.display="block";
+
+  renderNav();
+  renderQuestion();
+  startTimer();
+}
+
+function toggleNav(){ 
+  document.getElementById("question-nav").classList.toggle("hidden"); 
+}
+
+function renderNav(){
+  const nav=document.getElementById("question-nav");
+  nav.innerHTML="";
+  questions.forEach((_,i)=>{
+    const b=document.createElement("button");
+    b.textContent=i+1;
+
+    if(i===current) b.style.background="#cdeaff";
+    if(answers[i]!=null) b.style.borderColor="green";
+
+    b.onclick=()=>{current=i;renderQuestion()};
+    nav.appendChild(b);
+  });
+  updateStats();
+}
+
+// ----------------------------
+// MAIN QUESTION RENDERING
+// ----------------------------
+function renderQuestion(){
+  const q = questions[current];
+  
+  let html = `<h4>Question ${current+1}/${questions.length}</h4><p>${q.q}</p><div class='options'>`;
+
+  q.options.forEach((o, i) => {
+    let cls = "";
+    
+    if(!submitted && answers[current] === i) cls = "selected";
+    if(submitted){
+      if(i === q.answerId) cls = "correct disabled";
+      else if(answers[current] === i) cls = "wrong disabled";
+      else cls="disabled";
+    }
+
+    html += `
+      <label class="${cls}" onclick="selectOpt(${i})">
+        <input type="radio" name="opt" value="${i}" ${answers[current]===i?"checked":""}>
+        ${o}
+      </label>
+    `;
+  });
+
+  html += `</div>`;
+  document.getElementById("question-container").innerHTML = html;
+
+  if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+}
+
+function selectOpt(i){
+  if(submitted) return;
+  answers[current] = i;
+  renderQuestion();
+  renderNav();
+}
+
+function nextQuestion(){ if(current<questions.length-1){ current++; renderQuestion(); } }
+function prevQuestion(){ if(current>0){ current--; renderQuestion(); } }
+
+function updateStats(){
+  const a=answers.filter(x=>x!==null).length;
+  document.getElementById("answered").textContent=`Answered: ${a}`;
+  document.getElementById("not-answered").textContent=`Not Answered: ${questions.length-a}`;
+}
+
+// ----------------------------
+// TIMER
+// ----------------------------
+function startTimer(){
+  timerInterval=setInterval(()=>{
+    timeLeft--;
+    document.getElementById("timer").textContent=`${Math.floor(timeLeft/60)}:${String(timeLeft%60).padStart(2,'0')}`;
+    if(timeLeft<=0){ clearInterval(timerInterval); submitQuiz(); }
+  },1000);
+}
+
+// ----------------------------
+// SUBMIT QUIZ
+// ----------------------------
+function submitQuiz(){
+  if(submitted) return;
+  submitted=true;
+
+  clearInterval(timerInterval);
+
+  let correct=0, wrong=0;
+  questions.forEach((q,i)=>{
+    if(answers[i]!=null){
+      if(answers[i]===q.answerId) correct++;
+      else wrong++;
+    }
+  });
+
+  const skipped = questions.length - (correct + wrong);
+  const score = Math.round((correct/questions.length)*100);
+  const name = document.getElementById("userName").value;
+
+  // SEND TO GOOGLE FORM
+  const formData = new FormData();
+  formData.append(ENTRY_MOBILE, userMobile);
+  formData.append(ENTRY_QUIZ, QUIZ_TITLE);
+  formData.append(ENTRY_SCORE, score);
+  formData.append(ENTRY_CORRECT, correct);
+  formData.append(ENTRY_WRONG, wrong);
+  formData.append(ENTRY_SKIP, skipped);
+
+  fetch(FORM_URL, { method:"POST", mode:"no-cors", body:formData });
+
+  renderQuestion();
+  renderNav();
+
+  document.getElementById("result-section").innerHTML = `
+    <h3>Results</h3>
+    <p><b>Name:</b> ${name}</p>
+    <p><b>Mobile:</b> ${userMobile}</p>
+    <p><b>Score:</b> ${score}%</p>
+    <p><b>Correct:</b> ${correct}</p>
+    <p><b>Wrong:</b> ${wrong}</p>
+    <p><b>Skipped:</b> ${skipped}</p>
+  `;
+}
+
+// ----------------------------
+// FULL SCREEN
+// ----------------------------
+function toggleFullscreen(){
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+</script>
+
+</body>
+</html>
