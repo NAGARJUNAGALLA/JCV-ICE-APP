@@ -747,8 +747,7 @@ function renderNav(){
     const b=document.createElement("button");
     b.textContent=i+1;
 
-   // if(i===current) b.style.background="#cdeaff";
-    if(i === current) btn.classList.add("active");
+   if(i===current) b.style.background="#cdeaff";
     if(answers[i]!=null) b.style.borderColor="green";
 
     b.onclick=()=>{current=i;renderQuestion()};
