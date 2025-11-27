@@ -93,260 +93,195 @@ window.MathJax = {
 </div>
 
 <script>
-/* ================== CONFIG — EDIT THESE ================== */
+/* ================== CONFIG ================== */
 
-/* -> Put your sheet id and sheet name here <- */
-const SHEET_ID = "1qRFUQ_S_7pK_mb-cZb30CwcN6Gkb91A25Eq2JMefZNo";   // e.g. "1qRFUQ_S_7pK_..."
-const SHEET_NAME = "Sheet4";             // e.g. "Maths" (sheet/tab name)
+/* Apps Script Web App URL */
+const APP_URL = "https://script.google.com/macros/s/AKfycbz1L0J7otqex5BydAv9LFzBJ8hfCkH5gRyfWH8AN6Yb_5fFoMnEF8Sjjico19No8O_8rg/exec";
 
-/* Timer: seconds per question */
-const SECONDS_PER_QUESTION = 60; // change to desired seconds per question
+/* Timer settings */
+const SECONDS_PER_QUESTION = 60;
 
-/* Allowed / registered mobile numbers (edit for your users) */
-const allowedMobiles = ["6301186741","9876543210"]; // add numbers as needed
+/* Allowed mobile numbers */
+const allowedMobiles = ["6301186741", "9876543210"];
 
-/* Google Form (re-using your previous IDs) */
-const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfVoWZdJJTPQhxRCzPhD7UkbMYt13d1pzeWkm7a8Tvbil1P5A/formResponse";
-const ENTRY_MOBILE  = "entry.1096987326";
-const ENTRY_QUIZ    = "entry.1993342463";
-const ENTRY_SCORE   = "entry.1053562570";
-const ENTRY_CORRECT = "entry.1154826868";
-const ENTRY_WRONG   = "entry.1442969806";
-const ENTRY_SKIP    = "entry.770173959";
+/* ============================================ */
 
-/* ======================================================== */
-
-/* Derived sheet JSON URL (Google visualization API) */
-const SHEET_JSON_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
-
-/* State */
 let allQuestions = [];
-let answers = [];       // stores chosen option index or null
+let answers = [];
 let current = 0;
 let submitted = false;
 let userMobile = "";
 let timerTotal = 0;
 let timerInterval = null;
 
-/* ----------------- LOAD SHEET ----------------- */
-async function loadQuestionsFromSheet(){
+/* ----------------- LOAD QUESTIONS USING APPS SCRIPT ----------------- */
+async function loadQuestionsFromSheet() {
   try {
-    const res = await fetch(SHEET_JSON_URL);
-    let text = await res.text();
-    // extract JSON payload
-    text = text.substring(text.indexOf("{"), text.lastIndexOf("}") + 1);
-    const data = JSON.parse(text);
+    const res = await fetch(APP_URL);
+    allQuestions = await res.json();
 
-    // Expected columns per row in this order:
-    // [0] Question, [1] Option1, [2] Option2, [3] Option3, [4] Option4, [5] answerIndex (0-based)
-    allQuestions = (data.table.rows || []).map(r => ({
-      q: r.c[0] ? r.c[0].v : "",
-      opts: [
-        r.c[1] ? r.c[1].v : "",
-        r.c[2] ? r.c[2].v : "",
-        r.c[3] ? r.c[3].v : "",
-        r.c[4] ? r.c[4].v : ""
-      ],
-      answerId: (r.c[5] && r.c[5].v !== null && r.c[5].v !== undefined) ? Number(r.c[5].v) : null
-    }));
-
-    if(allQuestions.length === 0){
-      alert("No questions found in the specified sheet. Check SHEET_NAME and sheet data.");
+    if (!allQuestions.length) {
+      alert("No questions found. Check your sheet data.");
       return;
     }
 
-    // initialize
     answers = Array(allQuestions.length).fill(null);
     current = 0;
     submitted = false;
 
-    // set timer
     timerTotal = allQuestions.length * SECONDS_PER_QUESTION;
     updateTimerDisplay();
 
-    // show quiz name and area
-    document.getElementById("quizNameDisplay").textContent = SHEET_NAME;
-    document.getElementById("mobile-card").classList.add('hidden');
-    document.getElementById("quiz-area").classList.remove('hidden');
+    document.getElementById("quizNameDisplay").textContent = "Sheet4";
+    document.getElementById("mobile-card").classList.add("hidden");
+    document.getElementById("quiz-area").classList.remove("hidden");
 
     renderNav();
     renderQuestion();
-
-    // start timer
     startTimer();
 
   } catch (err) {
-    console.error("Error loading sheet:", err);
-    alert("Failed to load sheet. Ensure SHEET_ID and SHEET_NAME are correct and sheet is shared (Anyone with link can view).");
+    alert("Error loading quiz. Check Apps Script URL.");
   }
 }
 
 /* ----------------- MOBILE VERIFICATION ----------------- */
-function verifyMobile(){
+function verifyMobile() {
   const m = document.getElementById("mobileInput").value.trim();
-  if(!m){ alert("Please enter mobile number"); return; }
-  if(!allowedMobiles.includes(m)){
-    alert("Mobile number not registered. Contact admin.");
-    return;
-  }
+  if (!m) return alert("Enter mobile number");
+  if (!allowedMobiles.includes(m)) return alert("Mobile not registered");
+
   userMobile = m;
-  // load sheet after verification
   loadQuestionsFromSheet();
 }
 
-/* ----------------- RENDER NAV ----------------- */
-function renderNav(){
+/* ----------------- RENDER NAVIGATION ----------------- */
+function renderNav() {
   const nav = document.getElementById("question-nav");
   nav.innerHTML = "";
+
   allQuestions.forEach((q, i) => {
     const btn = document.createElement("button");
-    btn.textContent = i+1;
-    btn.className = "";
-    if(i === current) btn.classList.add("active");
-    if(answers[i] !== null) btn.classList.add("answered");
-    btn.onclick = ()=> { current = i; renderQuestion(); };
+    btn.textContent = i + 1;
+    if (i === current) btn.classList.add("active");
+    if (answers[i] !== null) btn.classList.add("answered");
+    btn.onclick = () => { current = i; renderQuestion(); };
     nav.appendChild(btn);
   });
+
   updateStats();
 }
 
 /* ----------------- RENDER QUESTION ----------------- */
-function renderQuestion(){
-  const container = document.getElementById("question-container");
+function renderQuestion() {
   const qObj = allQuestions[current];
-  let html = `<h3>Question ${current+1} of ${allQuestions.length}</h3>`;
-  html += `<p style="font-size:16px;margin:6px 0 12px;">${escapeHtml(qObj.q)}</p>`;
-  html += `<div class="options">`;
+  const container = document.getElementById("question-container");
+
+  let html = `<h3>Question ${current + 1} of ${allQuestions.length}</h3>`;
+  html += `<p>${qObj.q}</p><div class="options">`;
+
   qObj.opts.forEach((opt, idx) => {
     let cls = "";
-    if(submitted){
-      if(qObj.answerId === idx) cls = "correct";
-      else if(answers[current] === idx && qObj.answerId !== idx) cls = "wrong";
+    if (submitted) {
+      if (qObj.answerId == idx) cls = "correct";
+      else if (answers[current] == idx) cls = "wrong";
     }
-    const checked = (answers[current] === idx) ? "checked" : "";
+
+    const checked = answers[current] == idx ? "checked" : "";
     const disabled = submitted ? "disabled" : "";
-    html += `<label class="${cls}">
-               <input type="radio" name="opt" value="${idx}" ${checked} ${disabled} onchange="selectOpt(${idx})" />
-               ${escapeHtml(opt)}
-             </label>`;
+
+    html += `
+      <label class="${cls}">
+        <input ${checked} ${disabled}
+          type="radio" name="opt"
+          onchange="selectOpt(${idx})">
+        ${opt}
+      </label>`;
   });
+
   html += `</div>`;
   container.innerHTML = html;
-
-  // MathJax typeset if present
-  if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([container]);
 
   renderNav();
 }
 
 /* ----------------- SELECT OPTION ----------------- */
-function selectOpt(i){
-  if(submitted) return;
+function selectOpt(i) {
+  if (submitted) return;
   answers[current] = i;
   renderNav();
 }
 
-/* ----------------- NAVIGATION ----------------- */
-function nextQuestion(){ if(current < allQuestions.length -1){ current++; renderQuestion(); } }
-function prevQuestion(){ if(current > 0){ current--; renderQuestion(); } }
-
-/* ----------------- STATS ----------------- */
-function updateStats(){
-  const answeredCount = answers.filter(a => a !== null).length;
-  document.getElementById("answered").textContent = "Answered: " + answeredCount;
-  document.getElementById("not-answered").textContent = "Not answered: " + (allQuestions.length - answeredCount);
-}
+function nextQuestion() { if (current < allQuestions.length - 1) { current++; renderQuestion(); } }
+function prevQuestion() { if (current > 0) { current--; renderQuestion(); } }
 
 /* ----------------- TIMER ----------------- */
-function startTimer(){
-  if(timerInterval) clearInterval(timerInterval);
+function startTimer() {
   timerInterval = setInterval(() => {
     timerTotal--;
     updateTimerDisplay();
-    if(timerTotal <= 0){
-      clearInterval(timerInterval);
-      timerInterval = null;
-      // auto submit when time ends
-      submitQuiz();
-    }
+    if (timerTotal <= 0) { submitQuiz(); }
   }, 1000);
 }
 
-function updateTimerDisplay(){
+function updateTimerDisplay() {
   const m = Math.floor(timerTotal / 60);
-  let s = timerTotal % 60;
-  s = s < 10 ? "0"+s : s;
+  const s = ("0" + (timerTotal % 60)).slice(-2);
   document.getElementById("timer").textContent = `${m}:${s}`;
 }
 
 /* ----------------- SUBMIT QUIZ ----------------- */
-function submitQuiz(){
-  if(submitted) return;
+async function submitQuiz() {
+  if (submitted) return;
   submitted = true;
-  if(timerInterval){ clearInterval(timerInterval); timerInterval = null; }
 
-  // compute results
+  clearInterval(timerInterval);
+
   let correct = 0, wrong = 0;
-  for(let i=0;i<allQuestions.length;i++){
-    const q = allQuestions[i];
-    if(answers[i] === null) continue;
-    if(q.answerId !== null && answers[i] === q.answerId) correct++;
-    else wrong++;
-  }
+  allQuestions.forEach((q, i) => {
+    if (answers[i] == q.answerId) correct++;
+    else if (answers[i] != null) wrong++;
+  });
+
   const skipped = allQuestions.length - (correct + wrong);
   const score = Math.round((correct / allQuestions.length) * 100);
 
-  // render current question to show correct/wrong highlights
+  /* display results */
+  document.getElementById("result-section").innerHTML = `
+    <h3>Quiz Submitted</h3>
+    <p>Mobile: ${userMobile}</p>
+    <p>Total: ${allQuestions.length}</p>
+    <p>Correct: ${correct}</p>
+    <p>Wrong: ${wrong}</p>
+    <p>Skipped: ${skipped}</p>
+    <p>Score: ${score}%</p>
+  `;
+  document.getElementById("result-section").style.display = "block";
+
   renderQuestion();
 
-  // show result panel
-  const rs = document.getElementById("result-section");
-  rs.style.display = "block";
-  rs.innerHTML = `
-    <h3>Quiz Submitted</h3>
-    <p><b>Mobile:</b> ${escapeHtml(userMobile)}</p>
-    <p><b>Quiz (sheet):</b> ${escapeHtml(SHEET_NAME)}</p>
-    <p><b>Total Questions:</b> ${allQuestions.length}</p>
-    <p><b>Correct:</b> ${correct}</p>
-    <p><b>Wrong:</b> ${wrong}</p>
-    <p><b>Skipped:</b> ${skipped}</p>
-    <p><b>Score:</b> ${score}%</p>
-  `;
-
-  // disable all radios
-  document.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
-
-  // send to Google Form (fire-and-forget)
-  sendResultsToForm(userMobile, SHEET_NAME, score, correct, wrong, skipped);
+  /* send results to Google Sheet (Apps Script POST) */
+  await fetch(APP_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      mobile: userMobile,
+      score,
+      correct,
+      wrong,
+      skipped
+    }),
+    headers: { "Content-Type": "application/json" }
+  });
 }
 
-/* ----------------- SEND RESULTS TO GOOGLE FORM ----------------- */
-function sendResultsToForm(mobile, quizName, score, correct, wrong, skipped){
-  try {
-    const fd = new FormData();
-    fd.append(ENTRY_MOBILE, mobile);
-    fd.append(ENTRY_QUIZ, quizName);
-    fd.append(ENTRY_SCORE, String(score));
-    fd.append(ENTRY_CORRECT, String(correct));
-    fd.append(ENTRY_WRONG, String(wrong));
-    fd.append(ENTRY_SKIP, String(skipped));
-
-    fetch(FORM_URL, { method:'POST', body: fd, mode: 'no-cors' }).catch(e => {
-      console.warn("Form submit warning (expected in no-cors):", e);
-    });
-  } catch (e){
-    console.error("Error sending results:", e);
-  }
+/* ----------------- UTILS ----------------- */
+function updateStats() {
+  const answered = answers.filter(a => a !== null).length;
+  document.getElementById("answered").textContent = "Answered: " + answered;
+  document.getElementById("not-answered").textContent =
+    "Not answered: " + (allQuestions.length - answered);
 }
-
-/* ----------------- UTIL ----------------- */
-function escapeHtml(str){
-  if(str === null || str === undefined) return "";
-  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
-
-/* ----------------- STARTUP ----------------- */
-/* Nothing runs until mobile is verified. User inputs mobile and we call loadQuestionsFromSheet() */
 </script>
+
 </body>
 </html>
