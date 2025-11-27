@@ -188,11 +188,21 @@ html, body {
 const VALID_MOBILES = ["6301186741", "9876543210", "9999999999"];
 let userMobile = "";
 
-function validateMobile(){
- const m = document.getElementById("mobileInput").value.trim();
+//function validateMobile(){
+// const m = document.getElementById("mobileInput").value.trim();
 //  if(!VALID_MOBILES.includes(m)){
  //   alert("Mobile number not registered!");
  //   return;
+//if(!VALID_MOBILES.includes(m)){
+   // errorDiv.textContent = "Mobile number not registered!"; // show below input
+    //return;
+  )/} else {
+   // errorDiv.textContent = ""; // clear error if mobile is valid
+ // }
+  function validateMobile(){
+  const m = document.getElementById("mobileInput").value.trim();
+  const errorDiv = document.getElementById("mobileError");
+
   if(!VALID_MOBILES.includes(m)){
     errorDiv.textContent = "Mobile number not registered!"; // show below input
     return;
