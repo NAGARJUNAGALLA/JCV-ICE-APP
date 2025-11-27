@@ -3,7 +3,17 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SSC Style Exam — Full Interface + Review</title>
+<title>SSC Mock Exam — Full Interface + Summary</title>
+
+<!-- MathJax -->
+<script>
+window.MathJax = {
+  tex: { inlineMath: [["\\(","\\)"]], displayMath: [["\\[","\\]"]] },
+  svg: { fontCache: "global" }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
 <style>
 :root{
   --primary:#0b57a4;
@@ -13,8 +23,6 @@
   --muted:#666;
   --green:#d4edda;
   --red:#f8d7da;
-  --green-border:#28a745;
-  --red-border:#dc3545;
 }
 *{box-sizing:border-box}
 body{ margin:0; font-family:Inter,Segoe UI,Arial; background:var(--bg); color:#111; -webkit-user-select:none; user-select:none; }
@@ -49,9 +57,8 @@ body{ margin:0; font-family:Inter,Segoe UI,Arial; background:var(--bg); color:#1
 .options{ display:flex; flex-direction:column; gap:10px}
 .opt{ padding:12px; border-radius:8px; border:1px solid #e6e9f0; background:#fbfdff; cursor:pointer; user-select:none; }
 .opt.selected{ border-color:var(--primary); background:#eaf3ff; box-shadow:0 1px 0 rgba(11,87,164,0.05)}
-/* review mode states */
-.opt.correct{ background:var(--green); border-color:var(--green-border); }
-.opt.wrong-selected{ background:var(--red); border-color:var(--red-border); color:#721c24; }
+.opt.correct{ background:var(--green); border-color:#28a745; }
+.opt.wrong-selected{ background:var(--red); border-color:#dc3545; color:#721c24; }
 
 /* meta */
 .metaRow{ display:flex; gap:8px; align-items:center; margin-top:10px}
@@ -63,9 +70,9 @@ body{ margin:0; font-family:Inter,Segoe UI,Arial; background:var(--bg); color:#1
 .btn.secondary{ background:#fff; color:var(--primary); border:1px solid var(--primary) }
 .btn.warn{ background:var(--accent); color:#111 }
 
-/* right palette (hidden on small) */
+/* right palette */
 .palette{ width:260px; position:sticky; top:76px; align-self:start; height:calc(100vh - 110px); }
-@media(max-width:950px){ .palette{ display:none } }
+@media(max-width:950px){ .palette{ display:none }}
 
 /* palette UI */
 .palette .card{ height:100%; padding:12px; display:flex; flex-direction:column }
@@ -83,18 +90,27 @@ body{ margin:0; font-family:Inter,Segoe UI,Arial; background:var(--bg); color:#1
 .overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:85; }
 .overlay.show{ display:block }
 
-/* login modal (center) */
+/* login modal */
 #loginModal{ position:fixed; inset:0; display:flex; justify-content:center; align-items:center; z-index:120; background:linear-gradient(180deg, rgba(2,6,23,0.45), rgba(2,6,23,0.35)); }
 .loginCard{ width:420px; max-width:95%; background:var(--card); border-radius:12px; padding:20px; box-shadow:0 12px 30px rgba(2,6,23,0.15) }
-.loginCard h2{ margin:0 0 8px 0}
 .input{ width:100%; padding:12px; border-radius:8px; border:1px solid #e3e7ee; margin:8px 0; font-size:16px}
 .smallNote{ font-size:13px; color:var(--muted)}
+
+/* SUMMARY PAGE (Style A: SSC official) */
+#summaryPage{ display:none; padding:40px; }
+.summaryBox{
+  width:720px; max-width:95%; margin:28px auto; background:#fff; border:1px solid #e6e6e6; padding:18px; border-radius:6px;
+}
+.summaryHeader{ background:#4b2d73; color:#fff; padding:12px; border-radius:4px; font-weight:800; }
+.summaryTable{ width:100%; border-collapse:collapse; margin-top:12px; }
+.summaryTable td{ padding:10px; border-bottom:1px solid #eee; }
+.summaryBtns{ display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
 
 /* review header */
 .reviewHeader{ display:flex; gap:12px; align-items:center; margin-bottom:12px; }
 
 /* responsive tweaks */
-@media(max-width:640px){ .qtext{ font-size:16px } .btn{ padding:10px; font-size:14px } .topbar{ padding:0 8px } }
+@media(max-width:640px){ .qtext{ font-size:16px } .btn{ padding:10px; font-size:14px } .topbar{ padding:0 8px } .summaryBox{ width:95% } }
 </style>
 </head>
 <body>
@@ -112,23 +128,18 @@ body{ margin:0; font-family:Inter,Segoe UI,Arial; background:var(--bg); color:#1
   <div class="controls">
     <div id="timerDisplay" class="topbtn">00:00</div>
     <button class="topbtn" id="fullscreenBtn" title="Enter fullscreen">⤢ Fullscreen</button>
-    <!-- three-boxes icon button -->
     <button class="topbtn" id="togglePaletteTop" title="Toggle Question Palette">
-      <span class="icon-boxes" aria-hidden="true">
-        <span></span><span></span><span></span>
-      </span>
+      <span class="icon-boxes" aria-hidden="true"><span></span><span></span><span></span></span>
     </button>
     <div id="userMobileDisplay" class="topbtn" style="background:transparent;border:1px solid rgba(255,255,255,0.15)"></div>
   </div>
 </div>
 
 <!-- APP LAYOUT -->
-<div class="app">
+<div id="mainApp" class="app" style="display:none">
   <div class="main">
-    <!-- sections -->
     <div class="sections card" id="sectionsRow"></div>
 
-    <!-- question area -->
     <div class="card" id="questionArea">
       <div class="qmeta">
         <div><span id="qIndexText">Q1</span> <span class="small">| Section: <b id="qSectionText"></b></span></div>
@@ -162,13 +173,11 @@ body{ margin:0; font-family:Inter,Segoe UI,Arial; background:var(--bg); color:#1
       </div>
     </div>
 
-    <!-- important notes -->
     <div class="card smallNote">
-      <b>Note:</b> Copy/paste, right-click and common devtools shortcuts are disabled (best-effort). Fullscreen is available for focused test-taking.
+      <b>Note:</b> Copy/paste, right-click and common devtools shortcuts are disabled (best-effort). Fullscreen is available.
     </div>
   </div>
 
-  <!-- RIGHT: question palette -->
   <div class="palette">
     <div class="card">
       <div class="palHeader">
@@ -198,7 +207,7 @@ body{ margin:0; font-family:Inter,Segoe UI,Arial; background:var(--bg); color:#1
 
 <!-- LOGIN MODAL -->
 <div id="loginModal">
-  <div class="loginCard">
+  <div class="loginCard card">
     <h2>Login — Enter Mobile Number</h2>
     <input id="mobileInput" class="input" type="tel" placeholder="Enter mobile number (10 digits)" />
     <div style="display:flex; gap:8px; margin-top:6px">
@@ -212,41 +221,68 @@ body{ margin:0; font-family:Inter,Segoe UI,Arial; background:var(--bg); color:#1
   </div>
 </div>
 
+<!-- SUMMARY PAGE (Style A SSC Official) -->
+<div id="summaryPage">
+  <div class="summaryBox">
+    <div class="summaryHeader">Test Summary</div>
+    <table class="summaryTable">
+      <tr><td>Total Questions</td><td id="sum_total">0</td></tr>
+      <tr><td>Attempted</td><td id="sum_attempted">0</td></tr>
+      <tr><td>Not Attempted</td><td id="sum_notattempted">0</td></tr>
+      <tr><td>Marked for Review</td><td id="sum_marked">0</td></tr>
+      <tr><td>Attempted & Marked</td><td id="sum_attempted_marked">0</td></tr>
+      <tr><td>Time Taken</td><td id="sum_time">0</td></tr>
+      <tr><td>Score (auto)</td><td id="sum_score">0</td></tr>
+    </table>
+
+    <div class="summaryBtns">
+      <button class="btn secondary" id="returnTestBtn">Return to Test</button>
+      <button class="btn" id="confirmSubmitBtn">Confirm Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUBMIT CONFIRM / FINAL PAGE (simple) -->
+<div id="finalPage" style="display:none; padding:40px; text-align:center;">
+  <h2>Test Submitted</h2>
+  <p>Your responses were sent to Google Sheets (if form configured).</p>
+  <button class="btn" onclick="location.reload()">OK</button>
+</div>
+
 <script>
-/* ======================== CONFIG — EDIT THESE ========================= */
-// Allowed numbers (demo). Replace or integrate with your server.
+/* ======================== CONFIG ========================= */
+// Allowed numbers
 const VALID_MOBILE_NUMBERS = ["6301186741","9999999999","8888888888"];
 
-// Google Form configuration: replace with your form's values later
+// Google Form placeholders (replace with your values)
 const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/d/e/YOUR-GOOGLE-FORM-ID/formResponse";
-const ENTRY_MOBILE = "entry.111111111";   // replace with actual entry id for mobile
-const ENTRY_ANSWERS = "entry.222222222"; // replace with actual entry id for answers JSON
+const ENTRY_MOBILE = "entry.111111111";   // mobile field name
+const ENTRY_ANSWERS = "entry.222222222"; // answers JSON field name
 
-const EXAM_TITLE = "SSC Full Mock Test";
-
-/* ========================= TEST DATA (example) ======================== */
-/* Each question has: id, section, q, opts[], key */
+/* ========================= QUESTIONS (example) ======================== */
+/* Each question: { id, section, q, opts:[], key } */
 const QUESTIONS = [
-  { id:1, section:"Quant", q:"If x+2=7, then x = ?", opts:["3","5","-5","9"], key:"5" },
-  { id:2, section:"Quant", q:"LCM of 6 and 8 is ?", opts:["12","24","48","6"], key:"24" },
-  { id:3, section:"Reasoning", q:"What comes next in series: 2,4,8,16,?", opts:["24","32","64","48"], key:"32" },
-  { id:4, section:"Reasoning", q:"Find the odd one out: cat, dog, tiger, table", opts:["cat","dog","tiger","table"], key:"table" },
-  { id:5, section:"English", q:"Choose correct antonym of 'Brave'", opts:["Cowardly","Bold","Strong","Happy"], key:"Cowardly" },
-  { id:6, section:"English", q:"Pick the correct article: ___ apple", opts:["An","A","The","No article"], key:"An" },
-  { id:7, section:"GK", q:"Capital of India?", opts:["Mumbai","New Delhi","Kolkata","Chennai"], key:"New Delhi" },
-  { id:8, section:"Computer", q:"HTML stands for?", opts:["HyperText Markup Language","Home Tool Markup","Hyperlink Mode","None"], key:"HyperText Markup Language" }
+  { id:1, section:"Quant", q:"Solve: \\(12x+6=30\\). Find \\(x\\).", opts:["1","2","3","4"], key:"2" },
+  { id:2, section:"Quant", q:"Value of \\(\\frac{(a+b)^2-(a-b)^2}{4ab}\\) ?", opts:["1","2","a","b"], key:"1" },
+  { id:3, section:"Reasoning", q:"Series: 2,4,8,16, ? (choose)", opts:["24","32","64","48"], key:"32" },
+  { id:4, section:"English", q:"Antonym of 'Brave'", opts:["Cowardly","Bold","Strong","Happy"], key:"Cowardly" },
+  { id:5, section:"GK", q:"Capital of India?", opts:["Mumbai","New Delhi","Kolkata","Chennai"], key:"New Delhi" }
 ];
 
-/* ========================= INTERNAL STATE ============================ */
+/* ========================= STATE ============================ */
 let mobile = "";
+let SID = "";
 let currentIndex = 0;
-let answers = {};     // index -> chosen option
-let marked = {};      // index -> true/false
-let visited = {};     // index -> true/false
-let SID = "";         // localStorage key
+let answers = {};    // index -> option value
+let marked = {};     // index -> true/false
+let visited = {};    // index -> true/false
 let reviewMode = false;
+let startTime = null;
+let endTime = null;
+let totalTimeSec = QUESTIONS.length * 60;
+let timerInterval = null;
 
-/* ========================= DOM NODES ================================ */
+/* ========================= DOM NODES ======================== */
 const loginModal = document.getElementById("loginModal");
 const loginBtn = document.getElementById("loginBtn");
 const resumeBtn = document.getElementById("resumeBtn");
@@ -254,6 +290,7 @@ const mobileInput = document.getElementById("mobileInput");
 const loginError = document.getElementById("loginError");
 const userMobileDisplay = document.getElementById("userMobileDisplay");
 
+const mainApp = document.getElementById("mainApp");
 const sectionsRow = document.getElementById("sectionsRow");
 const qText = document.getElementById("qText");
 const optionsBox = document.getElementById("optionsBox");
@@ -277,39 +314,45 @@ const overlay = document.getElementById("overlay");
 const fullscreenBtn = document.getElementById("fullscreenBtn");
 const showSummaryBtn = document.getElementById("showSummaryBtn");
 const timePerTestText = document.getElementById("timePerTestText");
-const reviewBanner = document.getElementById("reviewBanner");
 
-/* ========================= TIMER LOGIC =============================== */
-let totalQuestions = QUESTIONS.length;
-let totalTimeSec = totalQuestions * 60; // 1 minute per question
-let timerInterval = null;
+const summaryPage = document.getElementById("summaryPage");
+const sum_total = document.getElementById("sum_total");
+const sum_attempted = document.getElementById("sum_attempted");
+const sum_notattempted = document.getElementById("sum_notattempted");
+const sum_marked = document.getElementById("sum_marked");
+const sum_attempted_marked = document.getElementById("sum_attempted_marked");
+const sum_time = document.getElementById("sum_time");
+const sum_score = document.getElementById("sum_score");
+const returnTestBtn = document.getElementById("returnTestBtn");
+const confirmSubmitBtn = document.getElementById("confirmSubmitBtn");
+const finalPage = document.getElementById("finalPage");
 
+/* ========================= TIMER ============================ */
 function startTimer(){
-  const key = SID + ":timeLeft";
-  let timeLeft = parseInt(localStorage.getItem(key) || totalTimeSec, 10);
-  timePerTestText.innerText = `${Math.floor(totalTimeSec/60)} min (${totalQuestions} Qs)`;
+  startTime = startTime || Date.now();
+  const stored = localStorage.getItem(SID + ":timeLeft");
+  let timeLeft = stored ? parseInt(stored,10) : totalTimeSec;
+  timePerTestText.innerText = `${Math.floor(totalTimeSec/60)} min (${QUESTIONS.length} Qs)`;
 
   if(timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(()=>{
     const mm = Math.floor(timeLeft/60);
     const ss = timeLeft % 60;
     timerDisplay.innerText = `${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
-    localStorage.setItem(key, timeLeft);
+    localStorage.setItem(SID + ":timeLeft", timeLeft);
     if(timeLeft <= 0){
       clearInterval(timerInterval);
       alert("Time is up. Test will be submitted automatically.");
-      submitTest();
+      openSummary(); // open summary automatically
     }
     timeLeft--;
   },1000);
 }
 
-/* ========================= SAVE / RESUME ============================= */
-function makeSID(mobile){
-  return `SSC_EXAM_${mobile}_v1`;
-}
+/* ========================= SAVE / RESUME ======================= */
+function makeSID(mobile){ return `SSC_EXAM_${mobile}_v1`; }
 function saveState(){
-  const data = { answers, marked, visited, currentIndex, timestamp: Date.now(), reviewMode };
+  const data = { answers, marked, visited, currentIndex, reviewMode, startTime };
   localStorage.setItem(SID, JSON.stringify(data));
   localStorage.setItem(SID + ":timeLeft", localStorage.getItem(SID + ":timeLeft") || totalTimeSec);
   savedStatus.innerText = "Yes";
@@ -324,17 +367,13 @@ function loadState(){
     visited = data.visited || {};
     currentIndex = data.currentIndex || 0;
     reviewMode = data.reviewMode || false;
+    startTime = data.startTime || Date.now();
     return true;
-  }catch(e){
-    return false;
-  }
+  }catch(e){ return false; }
 }
-function clearState(){
-  localStorage.removeItem(SID);
-  localStorage.removeItem(SID + ":timeLeft");
-}
+function clearState(){ localStorage.removeItem(SID); localStorage.removeItem(SID + ":timeLeft"); }
 
-/* ========================= UI RENDER ================================= */
+/* ========================= UI RENDER ========================== */
 function buildSections(){
   const secs = Array.from(new Set(QUESTIONS.map(q=>q.section)));
   sectionsRow.innerHTML = "";
@@ -352,55 +391,48 @@ function buildSections(){
     sectionsRow.appendChild(el);
   });
 }
+
 function renderQuestion(){
   const qObj = QUESTIONS[currentIndex];
   qIndexText.innerText = `Q ${currentIndex+1}`;
   qSectionText.innerText = qObj.section;
   qText.innerHTML = qObj.q;
-  optionsBox.innerHTML = "";
+  MathJax.typesetPromise().catch(()=>{});
 
+  optionsBox.innerHTML = "";
   qObj.opts.forEach((opt, i) => {
     const d = document.createElement("div");
     d.className = "opt";
     d.innerText = opt;
-
     if(reviewMode){
-      // highlight correct
       if(opt === qObj.key) d.classList.add("correct");
-      // highlight wrong selected option
       if(answers[currentIndex] && answers[currentIndex] === opt && opt !== qObj.key) d.classList.add("wrong-selected");
       d.style.cursor = "default";
     } else {
-      // normal interactive mode: NO AUTO-NEXT — only selection saved
       if(answers[currentIndex] === opt) d.classList.add("selected");
       d.onclick = () => {
-        // save choice but DO NOT change currentIndex
+        // Save but DO NOT auto-next
         answers[currentIndex] = opt;
         visited[currentIndex] = true;
         renderQuestion(); updatePalette(); saveState();
       };
     }
-
     optionsBox.appendChild(d);
   });
 
-  // metadata
   markedStatus.innerText = marked[currentIndex] ? "Yes" : "No";
   savedStatus.innerText = localStorage.getItem(SID) ? "Yes" : "No";
 
-  // highlight active section btn
+  // Highlight active section button
   document.querySelectorAll(".sectionBtn").forEach(el=>{
-    if(el.innerText === qObj.section) el.classList.add("active");
-    else el.classList.remove("active");
+    if(el.innerText === qObj.section) el.classList.add("active"); else el.classList.remove("active");
   });
 
-  // mark current palette
   updatePalette();
 
-  // Review mode -> show banner; BUT allow prev/next in review
+  // Review mode: disable save/mark/submit but allow prev/next
   if(reviewMode){
     reviewBanner.style.display = "flex";
-    // disable save/mark/submit only; prev/next should still work
     saveBtn.disabled = true; saveBtn.style.opacity = 0.5;
     markBtn.disabled = true; markBtn.style.opacity = 0.5;
     submitBtn.disabled = true; submitBtn.style.opacity = 0.5;
@@ -415,9 +447,12 @@ function renderQuestion(){
     nextBtn.disabled = false; nextBtn.style.opacity = 1;
   }
 }
+
 function updatePalette(){
-  paletteGrid.innerHTML = "";
-  mobilePaletteGrid.innerHTML = "";
+  const pg = document.getElementById("paletteGrid");
+  pg.innerHTML = "";
+  const mobilePg = document.getElementById("mobilePaletteGrid");
+  mobilePg.innerHTML = "";
   QUESTIONS.forEach((q, idx) => {
     const btn = document.createElement("div");
     btn.className = "pBtn " + (visited[idx] ? "visited" : "notVisited");
@@ -428,32 +463,25 @@ function updatePalette(){
       if(reviewMode) return; // disable palette navigation during review
       currentIndex = idx; renderQuestion(); saveState(); if(isMobile()) toggleMobilePal(false);
     };
-    paletteGrid.appendChild(btn);
-
+    pg.appendChild(btn);
     const mb = btn.cloneNode(true);
     mb.onclick = btn.onclick;
-    mobilePaletteGrid.appendChild(mb);
+    mobilePg.appendChild(mb);
   });
 }
 
-/* ========================= NAVIGATION ================================= */
-prevBtn.onclick = () => { if(currentIndex > 0){ currentIndex--; renderQuestion(); saveState(); } };
-nextBtn.onclick = () => {
-  if(currentIndex < QUESTIONS.length-1){ currentIndex++; renderQuestion(); saveState(); }
-  else { if(!reviewMode){ if(confirm("This is the last question. Submit the test now?")) submitTest(); } }
-};
+/* ========================= NAVIGATION ========================== */
+const prev = document.getElementById("prevBtn");
+const next = document.getElementById("nextBtn");
+prev.onclick = () => { if(currentIndex > 0){ currentIndex--; renderQuestion(); saveState(); } };
+next.onclick = () => { if(currentIndex < QUESTIONS.length-1){ currentIndex++; renderQuestion(); saveState(); } else { openSummary(); } };
 saveBtn.onclick = () => { saveState(); alert("Saved locally"); };
 markBtn.onclick = () => { if(reviewMode) return; marked[currentIndex] = !marked[currentIndex]; renderQuestion(); saveState(); };
-showSummaryBtn.onclick = () => {
-  let ansCount = Object.keys(answers).length;
-  let marks = Object.keys(marked).filter(k=>marked[k]).length;
-  alert(`Summary:\nAnswered: ${ansCount}/${QUESTIONS.length}\nMarked for review: ${marks}`);
-};
 
-/* ========================= PALETTE TOGGLE (mobile + top) ============== */
+/* ========================= PALETTE / MOBILE ======================= */
 function isMobile(){ return window.innerWidth <= 950; }
 let mobilePalOpen = false;
-paletteToggle.onclick = () => { if(isMobile()) toggleMobilePal(true); else { const el = document.querySelector('.palette'); el.scrollIntoView({behavior:'smooth', block:'start'}); } };
+paletteToggle && (paletteToggle.onclick = () => { if(isMobile()) toggleMobilePal(true); else { document.querySelector('.palette').scrollIntoView({behavior:'smooth'}); } });
 togglePaletteTop.onclick = () => { if(isMobile()) toggleMobilePal(true); else window.scrollTo({top:0, behavior:'smooth'}); };
 mobileClosePal.onclick = () => toggleMobilePal(false);
 function toggleMobilePal(open){
@@ -463,39 +491,88 @@ function toggleMobilePal(open){
 }
 overlay.onclick = () => toggleMobilePal(false);
 
-/* ========================= FULLSCREEN ================================= */
+/* ========================= FULLSCREEN =========================== */
 fullscreenBtn.onclick = () => {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(()=>{});
-    fullscreenBtn.innerText = "Exit Fullscreen";
-  } else {
-    document.exitFullscreen().catch(()=>{});
-    fullscreenBtn.innerText = "Fullscreen";
-  }
+  if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(()=>{}); fullscreenBtn.innerText = "Exit Fullscreen"; }
+  else { document.exitFullscreen().catch(()=>{}); fullscreenBtn.innerText = "Fullscreen"; }
 };
 
-/* ========================= SUBMIT TO GOOGLE FORM & ENTER REVIEW ======= */
-function submitTest(){
-  if(reviewMode) return;
-  try{ clearInterval(timerInterval); }catch(e){}
-  const payload = { mobile, answers, marked, visited, submittedAt: new Date().toISOString() };
+/* ========================= SUMMARY PAGE ========================== */
+function openSummary(){
+  // compute stats
+  const total = QUESTIONS.length;
+  const attempted = Object.keys(answers).length;
+  const notAttempted = total - attempted;
+  const markedCount = Object.keys(marked).filter(k=>marked[k]).length;
+  const attemptedMarked = Object.keys(answers).filter(k=>marked[k]).length;
+  endTime = Date.now();
+  const timeTakenSec = Math.max(0, Math.floor((endTime - (startTime || Date.now()))/1000));
+  const mm = Math.floor(timeTakenSec/60), ss = timeTakenSec%60;
+  const timeStr = `${mm}m ${ss}s`;
 
+  // score calculation (1 mark for correct, 0 for wrong - adjust if needed)
+  let score = 0;
+  QUESTIONS.forEach((q, idx) => {
+    if(answers[idx] && answers[idx] === q.key) score++;
+  });
+
+  // populate summary
+  sum_total.innerText = total;
+  sum_attempted.innerText = attempted;
+  sum_notattempted.innerText = notAttempted;
+  sum_marked.innerText = markedCount;
+  sum_attempted_marked.innerText = attemptedMarked;
+  sum_time.innerText = timeStr;
+  sum_score.innerText = score + " / " + total;
+
+  // show summary UI
+  document.getElementById("mainApp").style.display = "none";
+  summaryPage.style.display = "block";
+}
+
+/* Return to test from summary */
+returnTestBtn.onclick = () => {
+  summaryPage.style.display = "none";
+  document.getElementById("mainApp").style.display = "grid";
+};
+
+/* Confirm submit from summary -> send to Google Form and enter review mode */
+confirmSubmitBtn.onclick = () => {
+  // prepare payload
+  const payload = { mobile, answers, marked, visited, submittedAt: new Date().toISOString(), timeTakenMs: endTime - (startTime||Date.now()) };
+
+  // send to Google Form (fire-and-forget)
   try{
     const FD = new FormData();
     FD.append(ENTRY_MOBILE, mobile);
     FD.append(ENTRY_ANSWERS, JSON.stringify(payload));
     fetch(GOOGLE_FORM_ACTION, { method:'POST', body:FD, mode:'no-cors' });
-  }catch(e){ console.warn("Submit failed", e); }
+  }catch(e){ console.warn("Form submit failed", e); }
 
-  // Set review mode ON (do not clear state so user can revisit)
+  // set review mode and save
   reviewMode = true;
   saveState();
-  renderQuestion(); updatePalette();
-  alert("Test submitted. Responses sent to Google Sheets (if form configured). Entering review mode.");
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
 
-/* ========================= LOGIN FLOW ================================ */
+  // show main app and render review
+  summaryPage.style.display = "none";
+  document.getElementById("mainApp").style.display = "grid";
+  renderQuestion();
+
+  // disable palette clicks in review (visual only)
+  updatePalette();
+
+  alert("Confirmed. Responses sent and entering Review Mode.");
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+/* ========================= SUBMIT BUTTON (from main UI) ========= */
+submitBtn.onclick = () => {
+  // open summary instead of direct submit
+  endTime = Date.now();
+  openSummary();
+};
+
+/* ========================= LOGIN FLOW ============================ */
 loginBtn.onclick = () => {
   const val = mobileInput.value.trim();
   if(!/^[6-9]\d{9}$/.test(val)){ loginError.innerText = "Enter a valid 10 digit mobile number"; return; }
@@ -503,18 +580,15 @@ loginBtn.onclick = () => {
   mobile = val; SID = makeSID(mobile);
   userMobileDisplay.innerText = mobile;
   loginModal.style.display = "none";
+  document.getElementById("mainApp").style.display = "grid";
+
   const resumed = loadState();
   if(resumed){
     if(reviewMode){
-      buildSections();
-      renderQuestion();
-      updatePalette();
-      reviewBanner.style.display = "flex";
-      startTimer();
+      buildSections(); renderQuestion(); updatePalette(); reviewBanner.style.display = "flex"; startTimer();
     } else {
       if(!confirm("Resume previous saved test? Press OK to resume or Cancel to start fresh.")){
-        clearState();
-        answers = {}; marked = {}; visited = {}; currentIndex = 0; reviewMode = false;
+        clearState(); answers = {}; marked = {}; visited = {}; currentIndex = 0; reviewMode = false;
       }
       buildSections(); renderQuestion(); updatePalette(); startTimer(); saveState();
     }
@@ -522,6 +596,7 @@ loginBtn.onclick = () => {
     buildSections(); renderQuestion(); updatePalette(); startTimer(); saveState();
   }
 };
+
 resumeBtn.onclick = () => {
   const val = mobileInput.value.trim();
   if(!/^[6-9]\d{9}$/.test(val)){ loginError.innerText = "Enter valid mobile number"; return; }
@@ -531,27 +606,46 @@ resumeBtn.onclick = () => {
   const got = loadState();
   if(!got){ loginError.innerText = "No saved test found for this mobile."; return; }
   loginModal.style.display = "none";
+  document.getElementById("mainApp").style.display = "grid";
   buildSections(); renderQuestion(); updatePalette(); startTimer();
 };
 
-/* ========================= AUTO SAVE ON NAVIGATE ====================== */
+/* ========================= AUTO SAVE & UNLOAD ===================== */
 window.addEventListener("beforeunload", function(e){
   if(localStorage.getItem(SID) && !reviewMode){
-    e.preventDefault();
-    e.returnValue = '';
+    e.preventDefault(); e.returnValue = '';
   }
 });
 window.addEventListener("unload", () => { saveState(); });
 document.addEventListener("visibilitychange", () => { if(document.visibilityState === 'hidden') saveState(); });
 
-/* ========================= INITIALIZE ================================= */
+/* ========================= INIT ================================== */
 (function init(){
+  // nothing until login; load minimal UI
+  document.getElementById("mainApp").style.display = "none";
+  // Prebuild palette placeholders
+  const palette = document.getElementById("palette");
+  palette.innerHTML = `<div style="padding:12px;">Loading...</div>`;
+  // Build palette grid empty container
+  const pg = document.createElement("div"); pg.id="paletteGrid"; pg.className="qgrid";
+  palette.innerHTML = "";
+  palette.appendChild(pg);
   buildSections();
   renderQuestion();
   updatePalette();
 })();
 
-/* ========================= UI SAFEGUARDS: disable selection/devtools =========== */
+/* ========================= UTIL ================================== */
+function makeSID(mobile){ return `SSC_EXAM_${mobile}_v1`; }
+function isMobile(){ return window.innerWidth <= 950; }
+
+function toggleMobilePal(open){
+  mobilePalOpen = (open === undefined) ? !mobilePalOpen : open;
+  if(mobilePalOpen){ mobilePalette.classList.add('open'); overlay.classList.add('show'); }
+  else { mobilePalette.classList.remove('open'); overlay.classList.remove('show'); }
+}
+
+/* disable devtools & selection best-effort */
 (function disableShortcuts(){
   document.addEventListener('contextmenu', e => e.preventDefault());
   document.addEventListener('keydown', (e) => {
