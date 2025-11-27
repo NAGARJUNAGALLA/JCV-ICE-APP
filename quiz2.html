@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title></title>
+<title>SSC Quiz</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <!-- MathJax -->
@@ -38,10 +38,10 @@ html, body {
 
 /* HEADER */
 .quiz-header {
-  background-color: #1b4332;
-  background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+  background-color: #1e3a8a;
+ /* background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
                     linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-  background-size: 20px 20px;
+  background-size: 20px 20px;*/
   color: white;
   display: flex;
   justify-content: space-between;
@@ -62,7 +62,7 @@ html, body {
 
 .toggle-nav-btn {
   width: 100%;
-  background: #1b4332;
+  background: #1e3a8a;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -71,21 +71,34 @@ html, body {
   font-weight: 600;
 }
 
-.question-nav { display:flex; flex-wrap:nowrap;overflow-x:auto; gap:10px; }
+.question-nav { display:flex; flex-wrap:nowrap;overflow-x:auto; gap:10px; margin-bottom: 10px;}
 .question-nav button { 
   width:36px; height:36px; border-radius:50%; background:#eee; border:1px solid #ccc; 
+  font-weight: 600;
 }
-.question-nav button.active { border:2px solid #1b4332; background:blue;}
+.question-nav button.active { 
+  border: 2px solid #1e3a8a; 
+  background: #1e3a8a; 
+  color: white; 
+}
+.question-nav button.answered { 
+  border: 2px solid green; 
+  background: #b6fcb6; 
+  color: black;
+}
+
 .correct { border-color: green !important; background: #e8fce8 !important; }
 .wrong { border-color: red !important; background: #ffe8e8 !important; }
 
 /* Foot */
 .quiz-footer {
   position: fixed; bottom: 0; left: 0; right:0;
-  background: #1b4332;
+  background: #1e3a8a;
   padding: 10px;
+  display: flex;
+  justify-content: space-between;
 }
-.quiz-footer button { background:white; border:none; padding:10px; border-radius:25px; }
+.quiz-footer button { background:white; border:none; padding:10px 20px; border-radius:25px; cursor:pointer; }
 
 /* Option Buttons */
 .options label {
@@ -96,31 +109,16 @@ html, body {
   border-radius: 8px;
   border: 1px solid #ccc;
   font-size: 16px;
+  cursor: pointer;
 }
 
-.options label input {
-  display: none;
-}
+.options label input { display: none; }
 
-.options label.selected {
-  background: #d0e7ff;
-  border-color: #4da3ff;
-}
+.options label.selected { background: #d0e7ff; border-color: #4da3ff; }
 
-.options label.correct {
-  background: #e7ffe7 !important;
-  border-color: green !important;
-}
-
-.options label.wrong {
-  background: #ffe7e7 !important;
-  border-color: red !important;
-}
-
-.options label.disabled {
-  pointer-events: none;
-  opacity: 0.7;
-}
+.options label.correct { background: #e7ffe7 !important; border-color: green !important; }
+.options label.wrong { background: #ffe7e7 !important; border-color: red !important; }
+.options label.disabled { pointer-events: none; opacity: 0.7; }
 </style>
 </head>
 <body>
@@ -132,7 +130,7 @@ html, body {
          style="padding:10px; width:80%; max-width:300px; border-radius:8px; border:1px solid #ccc;">
   <br><br>
   <button onclick="validateMobile()" 
-          style="background:#1b4332; color:white; padding:10px 20px; border:none; border-radius:8px;">
+          style="background:#1e3a8a; color:white; padding:10px 20px; border:none; border-radius:8px;">
     Continue
   </button>
   <div id="mobileError" style="color:red; font-size:14px; margin-top:5px;"></div>
@@ -145,7 +143,7 @@ html, body {
          style="padding:10px; width:80%; max-width:300px; border-radius:8px; border:1px solid #ccc;">
   <br><br>
   <button onclick="startQuiz()" 
-          style="background:#1b4332; color:white; padding:10px 20px; border:none; border-radius:8px;">
+          style="background:#1e3a8a; color:white; padding:10px 20px; border:none; border-radius:8px;">
     Start Quiz
   </button>
 </div>
@@ -165,8 +163,6 @@ html, body {
       <span id="answered"></span>
       <span id="not-answered"></span>
     </div>
-
-    <button class="toggle-nav-btn" onclick="toggleNav()">🔽 Show/Hide Questions</button>
     <div class="question-nav" id="question-nav"></div>
 
     <div id="question-container"></div>
@@ -186,7 +182,7 @@ html, body {
 // ----------------------------
 // MOBILE LOGIN
 // ----------------------------
-const VALID_MOBILES = ["6301186741", "9876543210", "9999999999"];
+const VALID_MOBILES = ["7095987688","9999999999"];
 let userMobile = "";
 
 function validateMobile(){
@@ -194,10 +190,10 @@ function validateMobile(){
   const errorDiv = document.getElementById("mobileError");
 
   if(!VALID_MOBILES.includes(m)){
-    errorDiv.textContent = "Mobile number not registered!"; // show below input
+    errorDiv.textContent = "Mobile number not registered!";
     return;
   } else {
-    errorDiv.textContent = ""; // clear error if mobile is valid
+    errorDiv.textContent = "";
   }
 
   userMobile = m;
@@ -220,11 +216,11 @@ const ENTRY_SKIP    = "entry.770173959";
 const QUIZ_TITLE = "SSC CGL TIER 1 ENGLISH 26-09-2024";
 
 // ----------------------------
-// QUESTIONS
+// QUESTIONS (SAMPLE - shortened for brevity; you can include all as before)
 // ----------------------------
 const questions = [
   {
-    "q": "Which of the following is a quadratic equation? \u003Cbr\u003E కింది వానిలో వర్గ సమీకరణం ఏది ?",
+"q": "Which of the following is a quadratic equation? \u003Cbr\u003E కింది వానిలో వర్గ సమీకరణం ఏది ?",
     "options": [
       "$3x + 7 = 0 $",
       "$ x^2 + 5x + 6 = 0 $",
@@ -713,6 +709,7 @@ const questions = [
     ],
     "answerId": 2
   }
+  // add remaining questions here...
 ];
 
 let current=0;
@@ -740,17 +737,22 @@ function toggleNav(){
   document.getElementById("question-nav").classList.toggle("hidden"); 
 }
 
+// ----------------------------
+// QUESTION NAVIGATION
+// ----------------------------
 function renderNav(){
-  const nav=document.getElementById("question-nav");
-  nav.innerHTML="";
-  questions.forEach((_,i)=>{
-    const b=document.createElement("button");
-    b.textContent=i+1;
+  const nav = document.getElementById("question-nav");
+  nav.innerHTML = "";
+  questions.forEach((_, i) => {
+    const b = document.createElement("button");
+    b.textContent = i + 1;
 
-   if(i===current) b.style.background="#cdeaff";
-    if(answers[i]!=null) b.style.borderColor="green";
+    // Current question
+    if(i === current) b.classList.add("active");
+    // Answered questions
+    if(answers[i] != null) b.classList.add("answered");
 
-    b.onclick=()=>{current=i;renderQuestion()};
+    b.onclick = () => { current = i; renderQuestion(); renderNav(); };
     nav.appendChild(b);
   });
   updateStats();
@@ -795,8 +797,8 @@ function selectOpt(i){
   renderNav();
 }
 
-function nextQuestion(){ if(current<questions.length-1){ current++; renderQuestion(); } }
-function prevQuestion(){ if(current>0){ current--; renderQuestion(); } }
+function nextQuestion(){ if(current<questions.length-1){ current++; renderQuestion(); renderNav(); } }
+function prevQuestion(){ if(current>0){ current--; renderQuestion(); renderNav(); } }
 
 function updateStats(){
   const a=answers.filter(x=>x!==null).length;
@@ -868,7 +870,6 @@ function toggleFullscreen(){
   if(!document.fullscreenElement) document.documentElement.requestFullscreen();
   else document.exitFullscreen();
 }
-
 </script>
 
 </body>
