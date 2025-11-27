@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SSC Style Exam — Full Interface + Review</title>
+<style>
+:root{
+  --primary:#0b57a4;
+  --accent:#ffb000;
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --muted:#666;
+  --green:#d4edda;
+  --red:#f8d7da;
+  --green-border:#28a745;
+  --red-border:#dc3545;
+}
+*{box-sizing:border-box}
+body{ margin:0; font-family:Inter,Segoe UI,Arial; background:var(--bg); color:#111; -webkit-user-select:none; user-select:none; }
+
+/* Topbar */
+.topbar{ height:60px; background:linear-gradient(90deg,var(--primary),#083f7a); color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 14px; gap:12px; position:sticky; top:0; z-index:50; }
+.brand{display:flex; align-items:center; gap:12px; font-weight:700}
+.brand .logo{ width:42px; height:42px; border-radius:6px; background:#fff3; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; }
+.topbar .controls{display:flex; align-items:center; gap:8px}
+.topbtn{ background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:8px 10px; border-radius:6px; cursor:pointer; font-weight:700; }
+
+/* three-box palette icon */
+.icon-boxes{ width:28px; height:20px; display:inline-grid; grid-template-columns:repeat(3,1fr); gap:4px; }
+.icon-boxes span{ display:block; width:8px; height:8px; background:rgba(255,255,255,0.95); border-radius:2px; }
+
+/* layout */
+.app{ display:grid; grid-template-columns: 1fr 260px; gap:18px; padding:18px; max-width:1200px; margin:18px auto; }
+@media(max-width:950px){ .app{ grid-template-columns:1fr; padding:12px } }
+
+/* left column: main */
+.main{ display:flex; flex-direction:column; gap:12px; }
+
+/* sections row */
+.sections{ display:flex; gap:8px; flex-wrap:wrap; }
+.sectionBtn{ padding:10px 14px; background:var(--card); border-radius:8px; cursor:pointer; border:1px solid #e3e7ee; font-weight:700; color:var(--muted); }
+.sectionBtn.active{ background:var(--primary); color:#fff; border-color:var(--primary)}
+
+/* question card */
+.card{ background:var(--card); border-radius:12px; padding:16px; box-shadow:0 6px 18px rgba(12,36,80,0.06); }
+.qmeta{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px}
+.qtext{ font-size:18px; line-height:1.4; margin-bottom:10px}
+.options{ display:flex; flex-direction:column; gap:10px}
+.opt{ padding:12px; border-radius:8px; border:1px solid #e6e9f0; background:#fbfdff; cursor:pointer; user-select:none; }
+.opt.selected{ border-color:var(--primary); background:#eaf3ff; box-shadow:0 1px 0 rgba(11,87,164,0.05)}
+/* review mode states */
+.opt.correct{ background:var(--green); border-color:var(--green-border); }
+.opt.wrong-selected{ background:var(--red); border-color:var(--red-border); color:#721c24; }
+
+/* meta */
+.metaRow{ display:flex; gap:8px; align-items:center; margin-top:10px}
+.small{ font-size:13px; color:var(--muted)}
+
+/* footer nav */
+.footerNav{ display:flex; gap:10px; justify-content:space-between; align-items:center; margin-top:12px; }
+.btn{ padding:12px 14px; border-radius:8px; border:none; cursor:pointer; font-weight:800; background:var(--primary); color:#fff; }
+.btn.secondary{ background:#fff; color:var(--primary); border:1px solid var(--primary) }
+.btn.warn{ background:var(--accent); color:#111 }
+
+/* right palette (hidden on small) */
+.palette{ width:260px; position:sticky; top:76px; align-self:start; height:calc(100vh - 110px); }
+@media(max-width:950px){ .palette{ display:none } }
+
+/* palette UI */
+.palette .card{ height:100%; padding:12px; display:flex; flex-direction:column }
+.palette .palHeader{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px}
+.qgrid{ display:flex; flex-wrap:wrap; gap:8px; }
+.pBtn{ width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; background:#eee; border-radius:50%; font-weight:700; cursor:pointer; border:1px solid #ddd; }
+.pBtn.notVisited{ background:#ffdbe6 } /* pink */
+.pBtn.visited{ background:#c7f0c6 } /* green */
+.pBtn.marked{ background:#ffe1b3 } /* yellow */
+.pBtn.current{ outline:3px solid rgba(11,87,164,0.12) }
+
+/* mobile sliding palette */
+.mobilePalette{ position:fixed; right:-320px; top:60px; width:300px; height:calc(100% - 60px); background:var(--card); box-shadow:-8px 0 30px rgba(0,0,0,0.15); transition:0.28s; z-index:90; padding:12px; }
+.mobilePalette.open{ right:0 }
+.overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:85; }
+.overlay.show{ display:block }
+
+/* login modal (center) */
+#loginModal{ position:fixed; inset:0; display:flex; justify-content:center; align-items:center; z-index:120; background:linear-gradient(180deg, rgba(2,6,23,0.45), rgba(2,6,23,0.35)); }
+.loginCard{ width:420px; max-width:95%; background:var(--card); border-radius:12px; padding:20px; box-shadow:0 12px 30px rgba(2,6,23,0.15) }
+.loginCard h2{ margin:0 0 8px 0}
+.input{ width:100%; padding:12px; border-radius:8px; border:1px solid #e3e7ee; margin:8px 0; font-size:16px}
+.smallNote{ font-size:13px; color:var(--muted)}
+
+/* review header */
+.reviewHeader{ display:flex; gap:12px; align-items:center; margin-bottom:12px; }
+
+/* responsive tweaks */
+@media(max-width:640px){ .qtext{ font-size:16px } .btn{ padding:10px; font-size:14px } .topbar{ padding:0 8px } }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">SSC</div>
+    <div>
+      <div style="font-size:15px">SSC Mock Exam</div>
+      <div style="font-size:12px;opacity:0.9">Full Test Interface</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div id="timerDisplay" class="topbtn">00:00</div>
+    <button class="topbtn" id="fullscreenBtn" title="Enter fullscreen">⤢ Fullscreen</button>
+    <!-- three-boxes icon button -->
+    <button class="topbtn" id="togglePaletteTop" title="Toggle Question Palette">
+      <span class="icon-boxes" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+    </button>
+    <div id="userMobileDisplay" class="topbtn" style="background:transparent;border:1px solid rgba(255,255,255,0.15)"></div>
+  </div>
+</div>
+
+<!-- APP LAYOUT -->
+<div class="app">
+  <div class="main">
+    <!-- sections -->
+    <div class="sections card" id="sectionsRow"></div>
+
+    <!-- question area -->
+    <div class="card" id="questionArea">
+      <div class="qmeta">
+        <div><span id="qIndexText">Q1</span> <span class="small">| Section: <b id="qSectionText"></b></span></div>
+        <div class="small">Time per test: <b id="timePerTestText"></b></div>
+      </div>
+
+      <div id="reviewBanner" style="display:none" class="reviewHeader card">
+        <div style="font-weight:800; color:var(--primary)">REVIEW MODE</div>
+        <div class="small">Answers are disabled. Correct answers highlighted green. Wrong selections in red.</div>
+      </div>
+
+      <div class="qtext" id="qText">Loading question...</div>
+
+      <div class="options" id="optionsBox"></div>
+
+      <div class="metaRow">
+        <div class="small"><b>Marked:</b> <span id="markedStatus">No</span></div>
+        <div class="small"><b>Saved:</b> <span id="savedStatus">Yes</span></div>
+      </div>
+
+      <div class="footerNav">
+        <div style="display:flex;gap:10px;">
+          <button class="btn secondary" id="prevBtn">Previous</button>
+          <button class="btn secondary" id="saveBtn">Save</button>
+          <button class="btn secondary" id="markBtn">Mark for Review</button>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" id="nextBtn">Next</button>
+          <button class="btn warn" id="submitBtn">Submit Test</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- important notes -->
+    <div class="card smallNote">
+      <b>Note:</b> Copy/paste, right-click and common devtools shortcuts are disabled (best-effort). Fullscreen is available for focused test-taking.
+    </div>
+  </div>
+
+  <!-- RIGHT: question palette -->
+  <div class="palette">
+    <div class="card">
+      <div class="palHeader">
+        <div><b>Question Palette</b></div>
+        <div><button class="btn secondary" id="paletteToggle">Toggle</button></div>
+      </div>
+      <div style="margin-bottom:8px" class="small">Tap a number to jump. Colors — Pink:not visited, Green:visited, Yellow:marked</div>
+      <div class="qgrid" id="paletteGrid"></div>
+
+      <div style="margin-top:auto; display:flex; gap:8px; align-items:center;">
+        <button class="btn secondary" id="showSummaryBtn">Show Summary</button>
+        <div class="small" style="margin-left:auto">Saved to browser</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE SLIDING PALETTE -->
+<div class="mobilePalette" id="mobilePalette">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+    <div><b>Questions</b></div>
+    <div><button class="btn secondary" id="mobileClosePal">Close</button></div>
+  </div>
+  <div class="qgrid" id="mobilePaletteGrid"></div>
+</div>
+<div class="overlay" id="overlay"></div>
+
+<!-- LOGIN MODAL -->
+<div id="loginModal">
+  <div class="loginCard">
+    <h2>Login — Enter Mobile Number</h2>
+    <input id="mobileInput" class="input" type="tel" placeholder="Enter mobile number (10 digits)" />
+    <div style="display:flex; gap:8px; margin-top:6px">
+      <button class="btn" id="loginBtn">Start Test</button>
+      <button class="btn secondary" id="resumeBtn">Resume Previous</button>
+    </div>
+    <div style="margin-top:10px" class="smallNote">
+      Allowed mobile numbers are controlled in the script. This demo saves progress locally in your browser.
+    </div>
+    <div id="loginError" style="color:#b00020; margin-top:8px; font-weight:700"></div>
+  </div>
+</div>
+
+<script>
+/* ======================== CONFIG — EDIT THESE ========================= */
+// Allowed numbers (demo). Replace or integrate with your server.
+const VALID_MOBILE_NUMBERS = ["6301186741","9999999999","8888888888"];
+
+// Google Form configuration: replace with your form's values later
+const GOOGLE_FORM_ACTION = "https://docs.google.com/forms/d/e/YOUR-GOOGLE-FORM-ID/formResponse";
+const ENTRY_MOBILE = "entry.111111111";   // replace with actual entry id for mobile
+const ENTRY_ANSWERS = "entry.222222222"; // replace with actual entry id for answers JSON
+
+const EXAM_TITLE = "SSC Full Mock Test";
+
+/* ========================= TEST DATA (example) ======================== */
+/* Each question has: id, section, q, opts[], key */
+const QUESTIONS = [
+  { id:1, section:"Quant", q:"If x+2=7, then x = ?", opts:["3","5","-5","9"], key:"5" },
+  { id:2, section:"Quant", q:"LCM of 6 and 8 is ?", opts:["12","24","48","6"], key:"24" },
+  { id:3, section:"Reasoning", q:"What comes next in series: 2,4,8,16,?", opts:["24","32","64","48"], key:"32" },
+  { id:4, section:"Reasoning", q:"Find the odd one out: cat, dog, tiger, table", opts:["cat","dog","tiger","table"], key:"table" },
+  { id:5, section:"English", q:"Choose correct antonym of 'Brave'", opts:["Cowardly","Bold","Strong","Happy"], key:"Cowardly" },
+  { id:6, section:"English", q:"Pick the correct article: ___ apple", opts:["An","A","The","No article"], key:"An" },
+  { id:7, section:"GK", q:"Capital of India?", opts:["Mumbai","New Delhi","Kolkata","Chennai"], key:"New Delhi" },
+  { id:8, section:"Computer", q:"HTML stands for?", opts:["HyperText Markup Language","Home Tool Markup","Hyperlink Mode","None"], key:"HyperText Markup Language" }
+];
+
+/* ========================= INTERNAL STATE ============================ */
+let mobile = "";
+let currentIndex = 0;
+let answers = {};     // index -> chosen option
+let marked = {};      // index -> true/false
+let visited = {};     // index -> true/false
+let SID = "";         // localStorage key
+let reviewMode = false;
+
+/* ========================= DOM NODES ================================ */
+const loginModal = document.getElementById("loginModal");
+const loginBtn = document.getElementById("loginBtn");
+const resumeBtn = document.getElementById("resumeBtn");
+const mobileInput = document.getElementById("mobileInput");
+const loginError = document.getElementById("loginError");
+const userMobileDisplay = document.getElementById("userMobileDisplay");
+
+const sectionsRow = document.getElementById("sectionsRow");
+const qText = document.getElementById("qText");
+const optionsBox = document.getElementById("optionsBox");
+const qIndexText = document.getElementById("qIndexText");
+const qSectionText = document.getElementById("qSectionText");
+const markedStatus = document.getElementById("markedStatus");
+const savedStatus = document.getElementById("savedStatus");
+const timerDisplay = document.getElementById("timerDisplay");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const saveBtn = document.getElementById("saveBtn");
+const markBtn = document.getElementById("markBtn");
+const submitBtn = document.getElementById("submitBtn");
+const paletteGrid = document.getElementById("paletteGrid");
+const mobilePaletteGrid = document.getElementById("mobilePaletteGrid");
+const paletteToggle = document.getElementById("paletteToggle");
+const togglePaletteTop = document.getElementById("togglePaletteTop");
+const mobilePalette = document.getElementById("mobilePalette");
+const mobileClosePal = document.getElementById("mobileClosePal");
+const overlay = document.getElementById("overlay");
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+const showSummaryBtn = document.getElementById("showSummaryBtn");
+const timePerTestText = document.getElementById("timePerTestText");
+const reviewBanner = document.getElementById("reviewBanner");
+
+/* ========================= TIMER LOGIC =============================== */
+let totalQuestions = QUESTIONS.length;
+let totalTimeSec = totalQuestions * 60; // 1 minute per question
+let timerInterval = null;
+
+function startTimer(){
+  const key = SID + ":timeLeft";
+  let timeLeft = parseInt(localStorage.getItem(key) || totalTimeSec, 10);
+  timePerTestText.innerText = `${Math.floor(totalTimeSec/60)} min (${totalQuestions} Qs)`;
+
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    const mm = Math.floor(timeLeft/60);
+    const ss = timeLeft % 60;
+    timerDisplay.innerText = `${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+    localStorage.setItem(key, timeLeft);
+    if(timeLeft <= 0){
+      clearInterval(timerInterval);
+      alert("Time is up. Test will be submitted automatically.");
+      submitTest();
+    }
+    timeLeft--;
+  },1000);
+}
+
+/* ========================= SAVE / RESUME ============================= */
+function makeSID(mobile){
+  return `SSC_EXAM_${mobile}_v1`;
+}
+function saveState(){
+  const data = { answers, marked, visited, currentIndex, timestamp: Date.now(), reviewMode };
+  localStorage.setItem(SID, JSON.stringify(data));
+  localStorage.setItem(SID + ":timeLeft", localStorage.getItem(SID + ":timeLeft") || totalTimeSec);
+  savedStatus.innerText = "Yes";
+}
+function loadState(){
+  const raw = localStorage.getItem(SID);
+  if(!raw) return false;
+  try{
+    const data = JSON.parse(raw);
+    answers = data.answers || {};
+    marked = data.marked || {};
+    visited = data.visited || {};
+    currentIndex = data.currentIndex || 0;
+    reviewMode = data.reviewMode || false;
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+function clearState(){
+  localStorage.removeItem(SID);
+  localStorage.removeItem(SID + ":timeLeft");
+}
+
+/* ========================= UI RENDER ================================= */
+function buildSections(){
+  const secs = Array.from(new Set(QUESTIONS.map(q=>q.section)));
+  sectionsRow.innerHTML = "";
+  secs.forEach((s, idx) => {
+    const el = document.createElement("div");
+    el.className = "sectionBtn";
+    el.innerText = s;
+    el.onclick = () => {
+      const first = QUESTIONS.findIndex(q => q.section === s);
+      if(first >= 0){ currentIndex = first; renderQuestion(); saveState(); }
+      document.querySelectorAll(".sectionBtn").forEach(x=>x.classList.remove("active"));
+      el.classList.add("active");
+    };
+    if(idx === 0) el.classList.add("active");
+    sectionsRow.appendChild(el);
+  });
+}
+function renderQuestion(){
+  const qObj = QUESTIONS[currentIndex];
+  qIndexText.innerText = `Q ${currentIndex+1}`;
+  qSectionText.innerText = qObj.section;
+  qText.innerHTML = qObj.q;
+  optionsBox.innerHTML = "";
+
+  qObj.opts.forEach((opt, i) => {
+    const d = document.createElement("div");
+    d.className = "opt";
+    d.innerText = opt;
+
+    if(reviewMode){
+      // highlight correct
+      if(opt === qObj.key) d.classList.add("correct");
+      // highlight wrong selected option
+      if(answers[currentIndex] && answers[currentIndex] === opt && opt !== qObj.key) d.classList.add("wrong-selected");
+      d.style.cursor = "default";
+    } else {
+      // normal interactive mode: NO AUTO-NEXT — only selection saved
+      if(answers[currentIndex] === opt) d.classList.add("selected");
+      d.onclick = () => {
+        // save choice but DO NOT change currentIndex
+        answers[currentIndex] = opt;
+        visited[currentIndex] = true;
+        renderQuestion(); updatePalette(); saveState();
+      };
+    }
+
+    optionsBox.appendChild(d);
+  });
+
+  // metadata
+  markedStatus.innerText = marked[currentIndex] ? "Yes" : "No";
+  savedStatus.innerText = localStorage.getItem(SID) ? "Yes" : "No";
+
+  // highlight active section btn
+  document.querySelectorAll(".sectionBtn").forEach(el=>{
+    if(el.innerText === qObj.section) el.classList.add("active");
+    else el.classList.remove("active");
+  });
+
+  // mark current palette
+  updatePalette();
+
+  // Review mode -> show banner; BUT allow prev/next in review
+  if(reviewMode){
+    reviewBanner.style.display = "flex";
+    // disable save/mark/submit only; prev/next should still work
+    saveBtn.disabled = true; saveBtn.style.opacity = 0.5;
+    markBtn.disabled = true; markBtn.style.opacity = 0.5;
+    submitBtn.disabled = true; submitBtn.style.opacity = 0.5;
+    prevBtn.disabled = false; prevBtn.style.opacity = 1;
+    nextBtn.disabled = false; nextBtn.style.opacity = 1;
+  } else {
+    reviewBanner.style.display = "none";
+    saveBtn.disabled = false; saveBtn.style.opacity = 1;
+    markBtn.disabled = false; markBtn.style.opacity = 1;
+    submitBtn.disabled = false; submitBtn.style.opacity = 1;
+    prevBtn.disabled = false; prevBtn.style.opacity = 1;
+    nextBtn.disabled = false; nextBtn.style.opacity = 1;
+  }
+}
+function updatePalette(){
+  paletteGrid.innerHTML = "";
+  mobilePaletteGrid.innerHTML = "";
+  QUESTIONS.forEach((q, idx) => {
+    const btn = document.createElement("div");
+    btn.className = "pBtn " + (visited[idx] ? "visited" : "notVisited");
+    if(marked[idx]) btn.className = "pBtn marked";
+    if(idx === currentIndex) btn.classList.add("current");
+    btn.innerText = idx+1;
+    btn.onclick = () => {
+      if(reviewMode) return; // disable palette navigation during review
+      currentIndex = idx; renderQuestion(); saveState(); if(isMobile()) toggleMobilePal(false);
+    };
+    paletteGrid.appendChild(btn);
+
+    const mb = btn.cloneNode(true);
+    mb.onclick = btn.onclick;
+    mobilePaletteGrid.appendChild(mb);
+  });
+}
+
+/* ========================= NAVIGATION ================================= */
+prevBtn.onclick = () => { if(currentIndex > 0){ currentIndex--; renderQuestion(); saveState(); } };
+nextBtn.onclick = () => {
+  if(currentIndex < QUESTIONS.length-1){ currentIndex++; renderQuestion(); saveState(); }
+  else { if(!reviewMode){ if(confirm("This is the last question. Submit the test now?")) submitTest(); } }
+};
+saveBtn.onclick = () => { saveState(); alert("Saved locally"); };
+markBtn.onclick = () => { if(reviewMode) return; marked[currentIndex] = !marked[currentIndex]; renderQuestion(); saveState(); };
+showSummaryBtn.onclick = () => {
+  let ansCount = Object.keys(answers).length;
+  let marks = Object.keys(marked).filter(k=>marked[k]).length;
+  alert(`Summary:\nAnswered: ${ansCount}/${QUESTIONS.length}\nMarked for review: ${marks}`);
+};
+
+/* ========================= PALETTE TOGGLE (mobile + top) ============== */
+function isMobile(){ return window.innerWidth <= 950; }
+let mobilePalOpen = false;
+paletteToggle.onclick = () => { if(isMobile()) toggleMobilePal(true); else { const el = document.querySelector('.palette'); el.scrollIntoView({behavior:'smooth', block:'start'}); } };
+togglePaletteTop.onclick = () => { if(isMobile()) toggleMobilePal(true); else window.scrollTo({top:0, behavior:'smooth'}); };
+mobileClosePal.onclick = () => toggleMobilePal(false);
+function toggleMobilePal(open){
+  mobilePalOpen = (open === undefined) ? !mobilePalOpen : open;
+  if(mobilePalOpen){ mobilePalette.classList.add('open'); overlay.classList.add('show'); }
+  else { mobilePalette.classList.remove('open'); overlay.classList.remove('show'); }
+}
+overlay.onclick = () => toggleMobilePal(false);
+
+/* ========================= FULLSCREEN ================================= */
+fullscreenBtn.onclick = () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(()=>{});
+    fullscreenBtn.innerText = "Exit Fullscreen";
+  } else {
+    document.exitFullscreen().catch(()=>{});
+    fullscreenBtn.innerText = "Fullscreen";
+  }
+};
+
+/* ========================= SUBMIT TO GOOGLE FORM & ENTER REVIEW ======= */
+function submitTest(){
+  if(reviewMode) return;
+  try{ clearInterval(timerInterval); }catch(e){}
+  const payload = { mobile, answers, marked, visited, submittedAt: new Date().toISOString() };
+
+  try{
+    const FD = new FormData();
+    FD.append(ENTRY_MOBILE, mobile);
+    FD.append(ENTRY_ANSWERS, JSON.stringify(payload));
+    fetch(GOOGLE_FORM_ACTION, { method:'POST', body:FD, mode:'no-cors' });
+  }catch(e){ console.warn("Submit failed", e); }
+
+  // Set review mode ON (do not clear state so user can revisit)
+  reviewMode = true;
+  saveState();
+  renderQuestion(); updatePalette();
+  alert("Test submitted. Responses sent to Google Sheets (if form configured). Entering review mode.");
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ========================= LOGIN FLOW ================================ */
+loginBtn.onclick = () => {
+  const val = mobileInput.value.trim();
+  if(!/^[6-9]\d{9}$/.test(val)){ loginError.innerText = "Enter a valid 10 digit mobile number"; return; }
+  if(!VALID_MOBILE_NUMBERS.includes(val)){ loginError.innerText = "Mobile number not allowed (demo)"; return; }
+  mobile = val; SID = makeSID(mobile);
+  userMobileDisplay.innerText = mobile;
+  loginModal.style.display = "none";
+  const resumed = loadState();
+  if(resumed){
+    if(reviewMode){
+      buildSections();
+      renderQuestion();
+      updatePalette();
+      reviewBanner.style.display = "flex";
+      startTimer();
+    } else {
+      if(!confirm("Resume previous saved test? Press OK to resume or Cancel to start fresh.")){
+        clearState();
+        answers = {}; marked = {}; visited = {}; currentIndex = 0; reviewMode = false;
+      }
+      buildSections(); renderQuestion(); updatePalette(); startTimer(); saveState();
+    }
+  } else {
+    buildSections(); renderQuestion(); updatePalette(); startTimer(); saveState();
+  }
+};
+resumeBtn.onclick = () => {
+  const val = mobileInput.value.trim();
+  if(!/^[6-9]\d{9}$/.test(val)){ loginError.innerText = "Enter valid mobile number"; return; }
+  if(!VALID_MOBILE_NUMBERS.includes(val)){ loginError.innerText = "Mobile number not allowed (demo)"; return; }
+  mobile = val; SID = makeSID(mobile);
+  userMobileDisplay.innerText = mobile;
+  const got = loadState();
+  if(!got){ loginError.innerText = "No saved test found for this mobile."; return; }
+  loginModal.style.display = "none";
+  buildSections(); renderQuestion(); updatePalette(); startTimer();
+};
+
+/* ========================= AUTO SAVE ON NAVIGATE ====================== */
+window.addEventListener("beforeunload", function(e){
+  if(localStorage.getItem(SID) && !reviewMode){
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+window.addEventListener("unload", () => { saveState(); });
+document.addEventListener("visibilitychange", () => { if(document.visibilityState === 'hidden') saveState(); });
+
+/* ========================= INITIALIZE ================================= */
+(function init(){
+  buildSections();
+  renderQuestion();
+  updatePalette();
+})();
+
+/* ========================= UI SAFEGUARDS: disable selection/devtools =========== */
+(function disableShortcuts(){
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('keydown', (e) => {
+    if(e.key === "F12" || (e.ctrlKey && e.key==="u") || (e.ctrlKey && e.key==="s")) { e.preventDefault(); return false; }
+    if(e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'x' || e.key === 'a')) { e.preventDefault(); return false; }
+    if(e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) { e.preventDefault(); return false; }
+  });
+  document.addEventListener('selectstart', e => e.preventDefault());
+})();
+</script>
+
+</body>
+</html>
