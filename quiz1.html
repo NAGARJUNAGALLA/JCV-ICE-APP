@@ -757,9 +757,9 @@ function renderNav(){
 function renderQuestion(){
   const q = questions[current];
   
-  let html = `<h4>Question ${current+1}/${questions.length}</h4><p>${q.q}</p><div class='options'>`;
+  let html = `<h4>Question ${current+1}/${questions.length}</h4><p>${q.q}</p><div class='opts'>`;
 
-  q.options.forEach((o, i) => {
+  q.opts.forEach((o, i) => {
     let cls = "";
     
     if(!submitted && answers[current] === i) cls = "selected";
