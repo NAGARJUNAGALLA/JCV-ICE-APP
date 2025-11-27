@@ -79,51 +79,48 @@ html, body {
 .correct { border-color: green !important; background: #e8fce8 !important; }
 .wrong { border-color: red !important; background: #ffe8e8 !important; }
 
-/* FOOTER */
+/* Foot */
 .quiz-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right:0;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  background-color: #1b4332;
-  background-image: 
-    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-  background-size: 20px 20px;
-  border-top: 1px solid #ddd;
+  position: fixed; bottom: 0; left: 0; right:0;
+  background: #1b4332;
   padding: 10px;
-  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
 }
-.quiz-footer button {
-  flex: 1;
-  background:white;
-  color: #1b4332;
-  border: none;
-  padding: 10px;
-  border-radius: 25px;
-  font-size: 15px;
-  cursor: pointer;
-  transition: 0.3s;
-  margin: 0 5px;
-}
-.quiz
+.quiz-footer button { background:white; border:none; padding:10px; border-radius:25px; }
 
 /* Option Buttons */
 .options label {
   display: block;
-  border: 1px solid #ddd;
+  background: #f2f2f2;
+  padding: 12px;
+  margin-bottom: 10px;
   border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
+  border: 1px solid #ccc;
+  font-size: 16px;
 }
-.options label:hover { border-color: #1e3a8a; background: #f0f4ff; }
-.correct { border-color: green !important; background: #e8fce8 !important; }
-.wrong { border-color: red !important; background: #ffe8e8 !important; }
+
+.options label input {
+  display: none;
+}
+
+.options label.selected {
+  background: #d0e7ff;
+  border-color: #4da3ff;
+}
+
+.options label.correct {
+  background: #e7ffe7 !important;
+  border-color: green !important;
+}
+
+.options label.wrong {
+  background: #ffe7e7 !important;
+  border-color: red !important;
+}
+
+.options label.disabled {
+  pointer-events: none;
+  opacity: 0.7;
+}
 </style>
 </head>
 <body>
@@ -214,7 +211,7 @@ const ENTRY_CORRECT = "entry.1154826868";
 const ENTRY_WRONG   = "entry.1442969806";
 const ENTRY_SKIP    = "entry.770173959";
 
-const QUIZ_TITLE = "Quadratic Equations";
+const QUIZ_TITLE = "SSC CGL TIER 1 ENGLISH 26-09-2024";
 
 // ----------------------------
 // QUESTIONS
