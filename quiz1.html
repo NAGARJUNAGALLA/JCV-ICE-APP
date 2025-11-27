@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1, user-scalable=no">
-<title>Single-Sheet Quiz (with Timer & Mobile Verify)</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Psychology - సంఘర్షణ </title>
 
-<!-- Optional: MathJax if you use formulas -->
+<!-- MathJax -->
 <script>
 window.MathJax = {
   tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
@@ -16,274 +16,784 @@ window.MathJax = {
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 
 <style>
-  :root{--primary:#1E90FF;--accent:#1b4332;}
-  body{font-family:Arial, sans-serif;margin:0;background:#f5f7fa;color:#111}
-  .wrap{max-width:920px;margin:18px auto;padding:18px}
-  h1{color:var(--primary);text-align:center;margin:6px 0 18px}
-  .card{background:#fff;padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(10,10,10,0.05);margin-bottom:14px}
-  input[type="text"],select{width:100%;padding:10px;border-radius:8px;border:1px solid #d0d7de;font-size:15px;box-sizing:border-box}
-  button{background:var(--primary);color:#fff;border:none;padding:10px 14px;border-radius:8px;font-size:15px;cursor:pointer}
-  .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-  .question-nav{display:flex;gap:6px;overflow:auto;padding:8px 0;color:black}
-  .question-nav button{width:36px;height:36px;border-radius:50%;border:1px solid #ddd;background:#fff}
-  .question-nav button.answered{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .question-nav button.active{border:2px solid #333}
-  .options label{display:block;border:1px solid #ddd;border-radius:8px;padding:10px;margin:8px 0;cursor:pointer}
-  .options label.correct{background:#e8fce8;border-color:green}
-  .options label.wrong{background:#ffe8e8;border-color:red}
-  .footer-fixed{position:fixed;left:0;right:0;bottom:8px;display:flex;justify-content:center;gap:8px;padding:0 12px;pointer-events:none}
-  .footer-fixed .btn{pointer-events:auto;max-width:920px;width:100%;display:flex;gap:8px}
-  .footer-fixed button{flex:1}
-  #timer{font-weight:700;color:#c0392b}
-  #result-section{display:none;margin-top:10px}
-  .hidden{display:none}
-  @media (max-width:640px){ .topbar{flex-direction:column;align-items:stretch} }
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #f8fafc;
+  font-family: system-ui, sans-serif;
+}
+
+/* Start Screen */
+.start-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: white;
+  color: #1e3a8a;
+}
+.start-screen h1 { font-size: 28px; margin-bottom: 20px; }
+.start-screen button {
+  background: #1e3a8a;
+  color: white;
+  font-weight: 600;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.start-screen button:hover { background: #dbeafe; }
+
+/* Quiz Container */
+.quiz-container {
+  display: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -10px;
+  right: 0;
+  overflow-y: auto;
+  background: #fff;
+  height: 80vh;
+}
+
+/* HEADER */
+.quiz-header {
+  background: #1e3a8a;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  font-weight: 600;
+  font-size: 18px;
+  position: fixed;
+  top: 0;
+  left:0;
+  right:0;
+  z-index: 10;
+}
+
+/* BODY */
+.quiz-body {
+  flex: 1;
+  padding: 10px 10px 70px;
+  overflow-y:auto;
+}
+.stats {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Buttons */
+.toggle-nav-btn {
+  display: block;
+  width: 100%;
+  background: #1e3a8a;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.question-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+  overflow: hidden;
+  max-height: 200px;
+  transition: max-height 0.3s ease;
+}
+.question-nav.hidden { max-height: 0; margin: 0; }
+.question-nav button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.question-nav button.active { border: 2px solid #1e3a8a; }
+.question-nav button.answered { background: #1e3a8a; color: #fff; }
+
+#question-container h4 { font-size: 16px; margin-bottom: 8px; color: #333; }
+.options label {
+  display: block;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.options label:hover { border-color: #1e3a8a; background: #f0f4ff; }
+.correct { border-color: green !important; background: #e8fce8 !important; }
+.wrong { border-color: red !important; background: #ffe8e8 !important; }
+
+/* FOOTER */
+.quiz-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right:0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  background: #fff;
+  border-top: 1px solid #ddd;
+  padding: 10px;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+}
+.quiz-footer button {
+  flex: 1;
+  background: #1e3a8a;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 25px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.3s;
+  margin: 0 5px;
+}
+.quiz-footer button:hover { background: #2745aa; }
+
+/* RESULTS */
+#result-section {
+  background: #f9f9f9;
+  border-top: 2px solid #1e3a8a;
+  padding: 15px;
+  margin-top: 20px;
+  border-radius: 10px;
+}
+#result-section h3 { color: #1e3a8a; margin-bottom: 10px; }
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <!--<h1>Quiz</h1>-->
+<div class="start-screen" id="startScreen">
+  <h1>Math Quiz</h1>
+  <p> Instructions : </p>
+  <ul> 
+    <li> The quiz will be enabled fullscreen after start the quiz</li>
+  </ul>
+  <button onclick="startQuiz()">Start Quiz</button>
+  <p> Instructions : </p>
+</div>
 
-  <!-- MOBILE VERIFICATION -->
-  <div id="mobile-card" class="card">
-    <h3>Enter registered mobile number</h3>
-    <input id="mobileInput" type="text" placeholder="Mobile number (e.g. 6301186741)" />
-    <div style="margin-top:10px;text-align:center">
-      <button onclick="verifyMobile()">Verify & Continue</button>
-    </div>
-    <p style="color:#666;font-size:13px;margin-top:8px">Note: Edit <code>allowedMobiles</code> in the script to configure which numbers are allowed.</p>
+<div class="quiz-container" id="quizContainer">
+
+  <div class="quiz-header">
+    <div id="quiz-title">Psychology - సంఘర్షణ </div>
+    <div>⏱️ <span id="timer"></span></div>
   </div>
 
-  <!-- QUIZ AREA -->
-  <div id="quiz-area" class="card hidden">
-    <div class="topbar" style="margin-bottom:10px;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div>
-          <!--<label><strong></strong></label>
-          <div id="quizNameDisplay" style="padding:8px 10px;background:#fafafa;border-radius:8px;border:1px solid #eee"></div>
-        </div>-->
-      </div>
-
-      <div style="text-align:right;">
-        <div id="stats" style="font-size:14px;margin-bottom:6px;">
-          <span id="answered">Answered: 0</span> &nbsp;|&nbsp;
-          <span id="not-answered">Not answered: 0</span>
-        </div>
-        <div>Timer: <span id="timer">00:00</span></div>
-      </div>
+  <div class="quiz-body">
+    <div class="stats">
+      <span id="answered">Answered: 0</span>
+      <span id="not-answered">Not answered: 0</span>
     </div>
 
-    <div id="question-nav" class="question-nav"></div>
-
+    <button class="toggle-nav-btn" onclick="toggleNav()">🔽 Show/Hide Questions</button>
+    <div class="question-nav" id="question-nav"></div>
     <div id="question-container"></div>
-
-    <div id="result-section" class="card"></div>
+    <div id="result-section" class="hidden"></div>
   </div>
 
-</div>
-
-<!-- Footer fixed navigation -->
-<div class="footer-fixed">
-  <div class="btn" style="max-width:920px;margin:0 auto">
+  <div class="quiz-footer">
     <button onclick="prevQuestion()">Previous</button>
-    <button id="submitBtn" onclick="submitQuiz()">Submit</button>
-    <button onclick="nextQuestion()">Next</button>
+    <button onclick="nextQuestion()">Next</button><br/>
+    <button onclick="submitQuiz()">Submit</button>
   </div>
 </div>
-  <script>
-/* ================== CONFIG ================== */
 
-/* Your Apps Script URL */
-const APP_URL = "https://script.google.com/macros/s/AKfycbwxv4aEXRp-IDYuJj_6FRrJkZX3CDUi1CvdR58_BVEKzBuArz2gNHdXO9wZSnRXtw8hrw/exec";
+<script>
+const questions = [
+  [
+  {
+    "q": "Which of the following is a quadratic equation? \u003Cbr\u003E కింది వానిలో వర్గ సమీకరణం ఏది ?",
+    "opts": [
+      "$3x + 7 = 0 $",
+      "$ x^2 + 5x + 6 = 0 $",
+      "$ x^3 - 2 = 0 $",
+      " 7x = 0 "
+    ],
+    "answerId": "1"
+  },
+  {
+    "q": "The standard form of a quadratic equation is: \u003Cbr\u003E వర్గ సమీకరణం యొక్క సాధారణ రూపం :",
+    "opts": [
+      "$ax + b = 0$",
+      "$ ax^2 + bx + c = 0 $",
+      "$ ax^3 + bx^2 + c = 0 $",
+      "$ax^2 - bx = c $"
+    ],
+    "answerId": "1"
+  },
+  {
+    "q": "The value of discriminant is given by: \u003Cbr\u003E విచక్షిణి యొక్క విలువ :",
+    "opts": [
+      "$ b^2 - 4ac $",
+      "$4ac - b^2 $",
+      "$ b^2 + 4ac $",
+      "$2ac - b^2 $"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "If $b^2 - 4ac = 0 $, then the roots are:",
+    "opts": [
+      "Real and unequal(వాస్తవాలు మరియు అసమానం)",
+      "Imaginary (సంకీర్ణములు)",
+      "Real and equal(వాస్తవాలు మరియు సమానం)",
+      "None of these (పైవేవీ కాదు)"
+    ],
+    "answerId": "2"
+  },
+  {
+    "q": "If $b^2 - 4ac \u003C 0 $, the roots are:",
+    "opts": [
+      "Real and unequal(వాస్తవాలు మరియు అసమానం)",
+      "B) Real and equal",
+      "C) Not real",
+      "D) Rational"
+    ],
+    "answerId": "2"
+  },
+  {
+    "q": "The roots of $ x^2 - 9 = 0 $ are: \u003Cbr\u003E $ x^2 - 9 = 0 $ యొక్క మూలాలు",
+    "opts": [
+      "3, –3",
+      "9, –9",
+      "0, 9",
+      "0, –9"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "The quadratic equation whose roots are 4 and –3 is: \u003Cbr\u003E 4 మరియు -3 మూలాలు గల వర్గ సమీకరణం :",
+    "opts": [
+      "$ x^2 + x - 12 = 0 $",
+      "$ x^2 - x - 12 = 0 $",
+      "$ x^2 + 12 = 0 $",
+      "$ x^2 - 12 = 0 $"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "The product of roots is given by:",
+    "opts": [
+      "$ \\alpha + \\beta = -\\frac{b}{a} $",
+      "B) ( \\alpha\\beta = \\frac{c}{a} )",
+      "C) ( \\alpha\\beta = \\frac{-b}{a} )",
+      "D) ( \\alpha + \\beta = \\frac{c}{a} )"
+    ],
+    "answerId": "1"
+  },
+  {
+    "q": "9. The sum of roots of ( 2x^2 - 5x + 3 = 0 ) is:",
+    "opts": [
+      "A) 2.5",
+      "B) 5",
+      "C) ( \\frac{5}{2} )",
+      "D) ( \\frac{5}{-2} )"
+    ],
+    "answerId": "2"
+  },
+  {
+    "q": "10. The product of roots of ( 3x^2 - 7x + 2 = 0 ) is:",
+    "opts": [
+      "A) ( \\frac{2}{3} )",
+      "B) ( -\\frac{2}{3} )",
+      "C) 2",
+      "D) 3"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "11. The roots of ( x^2 + 6x + 9 = 0 ) are:",
+    "opts": [
+      "A) 3, –3",
+      "B) –3, –3",
+      "C) 3, 3",
+      "D) 0, –3"
+    ],
+    "answerId": "1"
+  },
+  {
+    "q": "12. The nature of roots of ( 4x^2 + 4x + 1 = 0 ):",
+    "opts": [
+      "A) Real and equal",
+      "B) Real and unequal",
+      "C) Imaginary",
+      "D) None"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "13. Which of the following has no real roots?",
+    "opts": [
+      "A) ( x^2 - 4 = 0 )",
+      "B) ( x^2 + 1 = 0 )",
+      "C) ( x^2 - x = 0 )",
+      "D) ( 3x^2 - 5 = 0 )"
+    ],
+    "answerId": "1"
+  },
+  {
+    "q": "14. ( x^2 - 5x + 6 = 0 ) has roots:",
+    "opts": [
+      "A) 3, 2",
+      "B) 5, 6",
+      "C) -3, -2",
+      "D) 6, −1"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "15. If the product of roots is 4 and sum of roots is 5, equation is:",
+    "opts": [
+      "A) ( x^2 - 5x + 4 = 0 )",
+      "B) ( x^2 + 5x + 4 = 0 )",
+      "C) ( x^2 - 4x + 5 = 0 )",
+      "D) ( x^2 + 4x - 5 = 0 )"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "16. A quadratic equation has two distinct real roots if:",
+    "opts": [
+      "A) D = 0",
+      "B) D \u003E 0",
+      "C) D \u003C 0",
+      "D) a = 0"
+    ],
+    "answerId": "1"
+  },
+  {
+    "q": "17. Which value of k makes ( x^2 + kx + 25 = 0 ) have equal roots?",
+    "opts": [
+      "A) 5",
+      "B) –5",
+      "C) 10",
+      "D) ±10"
+    ],
+    "answerId": "3"
+  },
+  {
+    "q": "18. Roots of ( 2x^2 - 8x = 0 ):",
+    "opts": [
+      "A) 0, 4",
+      "B) 2, 4",
+      "C) –2, 0",
+      "D) 8, 2"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "19. A quadratic equation has imaginary roots when:",
+    "opts": [
+      "A) D = 0",
+      "B) D \u003E 0",
+      "C) D \u003C 0",
+      "D) a = 0"
+    ],
+    "answerId": "2"
+  },
+  {
+    "q": "20. Roots of quadratic equation are given by:",
+    "opts": [
+      "A) ( \\frac{b \\pm \\sqrt{b^2 - 4ac}}{2} )",
+      "B) ( \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} )",
+      "C) ( \\frac{-b}{a} )",
+      "D) ( \\frac{c}{a} )"
+    ],
+    "answerId": "1"
+  },
+  {
+    "q": "21. Roots of ( x^2 - 16 = 0 ):",
+    "opts": [
+      "A) 4, -4",
+      "B) 16, -16",
+      "C) 8, -8",
+      "D) 0, ±4"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "22. The discriminant of ( x^2 - 7x + 10 = 0 ):",
+    "opts": [
+      "A) 9",
+      "B) 1",
+      "C) 49",
+      "D) –1"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "23. Roots of ( x^2 + 4x + 4 = 0 ):",
+    "opts": [
+      "A) –2, –2",
+      "B) –4, –4",
+      "C) 2, 2",
+      "D) 4, 4"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "24. The equation ( 5x^2 - 20x + 16 = 0 ) has:",
+    "opts": [
+      "A) Real and equal roots",
+      "B) Real and unequal roots",
+      "C) No real roots",
+      "D) One real root"
+    ],
+    "answerId": "1"
+  },
+  {
+    "q": "25. Roots of ( 3x^2 - 12 = 0 ):",
+    "opts": [
+      "A) ±2",
+      "B) ±4",
+      "C) ±(\\sqrt{4})",
+      "D) ±(\\sqrt{3})"
+    ],
+    "answerId": "1"
+  },
+  {
+    "q": "26. The coefficient of ( x^2 ) in quadratic equation cannot be:",
+    "opts": [
+      "A) 0",
+      "B) 1",
+      "C) –3",
+      "D) 5"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "27. Root of ( x^2 + 3x = 0 ):",
+    "opts": [
+      "A) 0, –3",
+      "B) 3, –3",
+      "C) –1, –2",
+      "D) 0, 1"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "28. Roots of ( 6x^2 - x - 1 = 0 ) are:",
+    "opts": [
+      "A) ( \\frac{1}{2}, -\\frac{1}{3} )",
+      "B) ( \\frac{1}{3}, -1 )",
+      "C) ( 1, -\\frac{1}{6} )",
+      "D) ( \\frac{2}{3}, -\\frac{1}{2} )"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "29. For which value of k is ( x^2 + 4x + k = 0 ) having real roots?",
+    "opts": [
+      "A) k \u003C 4",
+      "B) k ≤ 4",
+      "C) k ≥ 4",
+      "D) k ≥ 16"
+    ],
+    "answerId": "1"
+  },
+  {
+    "q": "30. Roots of ( 4x^2 - 9 = 0 ):",
+    "opts": [
+      "A) ±3/2",
+      "B) ±2/3",
+      "C) 3, –3",
+      "D) 2, –2"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "31. The equation ( x(2x - 3) = 4 ) becomes:",
+    "opts": [
+      "A) ( 2x^2 - 3x - 4 = 0 )",
+      "B) ( 2x^2 + 3x - 4 = 0 )",
+      "C) ( 2x^2 - 4x = 0 )",
+      "D) None of these"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "32. The quadratic equation with sum = –7 and product = 12:",
+    "opts": [
+      "A) ( x^2 - 7x + 12 = 0 )",
+      "B) ( x^2 + 7x + 12 = 0 )",
+      "C) ( x^2 + 7x - 12 = 0 )",
+      "D) ( x^2 - 7x - 12 = 0 )"
+    ],
+    "answerId": "1"
+  },
+  {
+    "q": "33. Roots of ( 10x^2 - x - 2 = 0 ) are:",
+    "opts": [
+      "A) 1, –2",
+      "B) ( \\frac{2}{5}, -\\frac{1}{2} )",
+      "C) ( \\frac{1}{2}, -\\frac{2}{5} )",
+      "D) 2, –1"
+    ],
+    "answerId": "2"
+  },
+  {
+    "q": "34. The discriminant of ( 9x^2 + 6x + 1 = 0 ):",
+    "opts": [
+      "A) 0",
+      "B) 36",
+      "C) –36",
+      "D) 12"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "35. Which one is NOT a quadratic equation?",
+    "opts": [
+      "A) ( x^2 + 2 = 0 )",
+      "B) ( 3x^2 - x + 7 = 0 )",
+      "C) ( x^3 + x^2 + 1 = 0 )",
+      "D) ( 2x^2 - 3x = 0 )"
+    ],
+    "answerId": "2"
+  },
+  {
+    "q": "36. Roots of ( x^2 - 4x + 3 = 0 ):",
+    "opts": [
+      "A) 1, 3",
+      "B) 3, 4",
+      "C) 4, 1",
+      "D) –1, –3"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "37. Roots of ( x^2 + x - 6 = 0 ):",
+    "opts": [
+      "A) 2, –3",
+      "B) 3, –2",
+      "C) –2, –3",
+      "D) 2, 3"
+    ],
+    "answerId": "1"
+  },
+  {
+    "q": "38. If D \u003E 0 and is a perfect square, roots are:",
+    "opts": [
+      "A) Real and equal",
+      "B) Real, unequal, rational",
+      "C) Real, unequal, irrational",
+      "D) Imaginary"
+    ],
+    "answerId": "1"
+  },
+  {
+    "q": "39. If D \u003E 0 but not a perfect square, roots are:",
+    "opts": [
+      "A) Real rational",
+      "B) Imaginary",
+      "C) Real irrational",
+      "D) Equal"
+    ],
+    "answerId": "2"
+  },
+  {
+    "q": "40. Roots of ( x^2 + 5x + 4 = 0 ):",
+    "opts": [
+      "A) –4, –1",
+      "B) 4, 1",
+      "C) –5, –4",
+      "D) –4, 5"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "41. The quadratic term in a quadratic equation is:",
+    "opts": [
+      "A) ( ax^0 )",
+      "B) ( ax^1 )",
+      "C) ( ax^2 )",
+      "D) ( ax^3 )"
+    ],
+    "answerId": "2"
+  },
+  {
+    "q": "42. For what value of m does ( x^2 + mx + 9 = 0 ) have equal roots?",
+    "opts": [
+      "A) ±6",
+      "B) ±9",
+      "C) 3",
+      "D) –6"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "Roots of ( 2x^2 - 2x + 1 = 0 ):",
+    "opts": [
+      "A) Real",
+      "B) Real and equal",
+      "C) Imaginary",
+      "D) None"
+    ],
+    "answerId": "2"
+  },
+  {
+    "q": "If roots are 5 and 7, equation is:",
+    "opts": [
+      "A) ( x^2 - 12x + 35 = 0 )",
+      "B) ( x^2 + 12x + 35 = 0 )",
+      "C) ( x^2 - 2x + 35 = 0 )",
+      "D) ( x^2 + 2x - 35 = 0 )"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "If a quadratic can be factorised, then D is:",
+    "opts": [
+      "D \u003C 0",
+      "D = 0",
+      "D \u003E 0 and perfect square",
+      " any value"
+    ],
+    "answerId": "2"
+  },
+  {
+    "q": "Roots of ( 7x^2 - x - 6 = 0 ):",
+    "opts": [
+      "A) ( \\frac{3}{7}, -2 )",
+      "B) ( 2, -\\frac{3}{7} )",
+      "C) ( \\frac{6}{7}, -1 )",
+      "D) None"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "Roots of ( x^2 - 1 = 0 ):",
+    "opts": [
+      "A) 0, 1",
+      "B) 1, –1",
+      "C) 1, 1",
+      "D) –1, –1"
+    ],
+    "answerId": "1"
+  },
+  {
+    "q": "If α and β are roots, equation is:",
+    "opts": [
+      "A) ( x^2 - (\\alpha + \\beta)x + \\alpha\\beta = 0 )",
+      "B) ( x^2 + (\\alpha + \\beta)x + \\alpha\\beta = 0 )",
+      "C) ( x^2 + \\alpha\\beta x + (\\alpha + \\beta) = 0 )",
+      "D) None"
+    ],
+    "answerId": "0"
+  },
+  {
+    "q": "Roots of ( 5x^2 - 20x + 15 = 0 ):",
+    "opts": [
+      "A) 1, 3",
+      "B) 3, 3",
+      "C) 2, 2",
+      "D) –3, –3"
+    ],
+    "answerId": "2"
+  }
+]
+];
 
-/* Allowed mobiles */
-const allowedMobiles = ["6301186741", "9876543210"];
+let current=0,answers=Array(questions.length).fill(null),submitted=false;
+let timeLeft=questions.length*60,timerInterval;
 
-/* Timer */
-const SECONDS_PER_QUESTION = 60;
-
-/* ===================================================== */
-
-let allQuestions = [];
-let answers = [];
-let current = 0;
-let submitted = false;
-let userMobile = "";
-
-let timerTotal = 0;
-let timerInterval = null;
-
-/* ---------------- MOBILE VERIFICATION ---------------- */
-function verifyMobile() {
-    const m = document.getElementById("mobileInput").value.trim();
-
-    if (!m) return alert("Enter mobile number");
-    if (!allowedMobiles.includes(m)) return alert("Mobile not registered");
-
-    userMobile = m;
-
-    loadQuestionsFromSheet();
+function startQuiz(){
+  document.getElementById("startScreen").style.display="none";
+  document.getElementById("quizContainer").style.display="block";
+  openFullscreen();
+  renderNav();
+  renderQuestion();
+  startTimer();
 }
 
-/* ---------------- LOAD QUESTIONS (APPS SCRIPT) ---------------- */
-async function loadQuestionsFromSheet() {
-    try {
-        const res = await fetch(APP_URL);   // <-- CORRECT URL
-        allQuestions = await res.json();    // <-- DIRECT JSON ARRAY
-
-        if (!Array.isArray(allQuestions) || allQuestions.length === 0) {
-            alert("No questions found. Check your Sheet4 data.");
-            return;
-        }
-
-        answers = Array(allQuestions.length).fill(null);
-        current = 0;
-        submitted = false;
-
-        timerTotal = allQuestions.length * SECONDS_PER_QUESTION;
-
-        document.getElementById("mobile-card").style.display = "none";
-        document.getElementById("quiz-area").style.display = "block";
-
-        renderNav();
-        renderQuestion();
-        startTimer();
-
-    } catch (e) {
-        console.error(e);
-        alert("Could not load quiz.\nCheck Apps Script URL & permissions.");
+function toggleNav(){
+  document.getElementById("question-nav").classList.toggle("hidden");
+}
+function renderNav(){
+  const nav=document.getElementById("question-nav");nav.innerHTML="";
+  questions.forEach((_,i)=>{
+    const b=document.createElement("button");
+    b.textContent=i+1;
+    b.className=(i===current?"active ":"")+(answers[i]!=null?"answered":"");
+    b.onclick=()=>{current=i;renderQuestion()};
+    nav.appendChild(b);
+  });updateStats();
+}
+function renderQuestion(){
+  const q=questions[current];
+  const c=document.getElementById("question-container");
+  let h=`<h4>Question ${current+1} of ${questions.length}</h4><p>${q.q}</p><div class="options">`;
+  q.options.forEach((o,i)=>{
+    let cls="";
+    if(submitted){
+      if(i===q.answerId) cls="correct";
+      else if(answers[current]===i && i!==q.answerId) cls="wrong";
     }
+    h+=`<label class="${cls}"><input type="radio" name="opt" value="${i}" ${answers[current]===i?'checked':''} ${submitted?'disabled':''} onchange="selectOpt(${i})">${o}</label>`;
+  });
+  h+="</div>";c.innerHTML=h;renderNav();
+  if(window.MathJax&&MathJax.typesetPromise) MathJax.typesetPromise([c]);
+}
+function selectOpt(i){if(submitted)return;answers[current]=i;renderNav();}
+function nextQuestion(){if(current<questions.length-1){current++;renderQuestion();}}
+function prevQuestion(){if(current>0){current--;renderQuestion();}}
+function updateStats(){
+  const a=answers.filter(x=>x!==null).length;
+  document.getElementById("answered").textContent="Answered: "+a;
+  document.getElementById("not-answered").textContent="Not answered: "+(questions.length-a);
+}
+function startTimer(){
+  updateTimer();timerInterval=setInterval(()=>{timeLeft--;updateTimer();if(timeLeft<=0){clearInterval(timerInterval);submitQuiz();}},1000);
+}
+function updateTimer(){
+  const m=Math.floor(timeLeft/60),s=timeLeft%60;
+  document.getElementById("timer").textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function submitQuiz(){
+  if(submitted)return;submitted=true;clearInterval(timerInterval);
+  let correct=0,wrong=0;
+  questions.forEach((q,i)=>{if(answers[i]!=null){if(answers[i]===q.answerId)correct++;else wrong++;}});
+  const skipped=questions.length-(correct+wrong);
+  let html=`<h3>Result Summary</h3>
+  <p><b>Total:</b> ${questions.length}</p>
+  <p><b>Correct:</b> ${correct}</p>
+  <p><b>Wrong:</b> ${wrong}</p>
+  <p><b>Skipped:</b> ${skipped}</p>`;
+  document.getElementById("result-section").innerHTML=html;
+  document.getElementById("result-section").classList.remove("hidden");
+  renderQuestion();
 }
 
-/* ---------------- RENDER NAV BUTTONS ---------------- */
-function renderNav() {
-    const nav = document.getElementById("question-nav");
-    nav.innerHTML = "";
-
-    allQuestions.forEach((q, i) => {
-        const btn = document.createElement("button");
-        btn.innerText = i + 1;
-
-        if (i === current) btn.classList.add("active");
-        if (answers[i] !== null) btn.classList.add("answered");
-
-        btn.onclick = () => {
-            current = i;
-            renderQuestion();
-        };
-
-        nav.appendChild(btn);
-    });
-
-    updateStats();
+/* === Fullscreen Logic === */
+function openFullscreen() {
+  const elem = document.documentElement;
+  if (elem.requestFullscreen) elem.requestFullscreen();
+  else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
 }
-
-/* ---------------- RENDER QUESTION ---------------- */
-function renderQuestion() {
-    const q = allQuestions[current];
-
-    let html = `<h3>Q${current + 1}. ${q.q}</h3><div class="options">`;
-
-    q.opts.forEach((opt, i) => {
-        let cls = "";
-        const checked = answers[current] === i ? "checked" : "";
-        const disabled = submitted ? "disabled" : "";
-
-        if (submitted) {
-            if (i === q.answerId) cls = "correct";
-            else if (answers[current] === i) cls = "wrong";
-        }
-
-        html += `
-            <label class="${cls}">
-                <input type="radio" name="opt" ${checked} ${disabled}
-                    onchange="selectOption(${i})">
-                ${opt}
-            </label>`;
-    });
-
-    html += `</div>`;
-    document.getElementById("question-container").innerHTML = html;
-
-    renderNav();
-}
-
-/* ---------------- SELECT OPTION ---------------- */
-function selectOption(i) {
-    if (submitted) return;
-    answers[current] = i;
-    renderNav();
-}
-
-/* ---------------- TIMER ---------------- */
-function startTimer() {
-    timerInterval = setInterval(() => {
-        timerTotal--;
-        let m = Math.floor(timerTotal / 60);
-        let s = ("0" + (timerTotal % 60)).slice(-2);
-        document.getElementById("timer").innerText = `${m}:${s}`;
-
-        if (timerTotal <= 0) submitQuiz();
-
-    }, 1000);
-}
-
-/* ---------------- SUBMIT QUIZ ---------------- */
-function submitQuiz() {
-    if (submitted) return;
-
-    submitted = true;
-    clearInterval(timerInterval);
-
-    let correct = 0;
-    let wrong = 0;
-
-    allQuestions.forEach((q, i) => {
-        if (answers[i] === q.answerId) correct++;
-        else if (answers[i] != null) wrong++;
-    });
-
-    const skipped = allQuestions.length - (correct + wrong);
-    const score = Math.round(correct / allQuestions.length * 100);
-
-    document.getElementById("result-section").innerHTML = `
-        <h3>Quiz Completed</h3>
-        <p><b>Mobile:</b> ${userMobile}</p>
-        <p><b>Total Questions:</b> ${allQuestions.length}</p>
-        <p><b>Correct:</b> ${correct}</p>
-        <p><b>Wrong:</b> ${wrong}</p>
-        <p><b>Skipped:</b> ${skipped}</p>
-        <p><b>Score:</b> ${score}%</p>
-    `;
-
-    document.getElementById("result-section").style.display = "block";
-
-    renderQuestion(); // show highlights
-}
-
-/* ---------------- NAVIGATION ---------------- */
-function nextQuestion() {
-    if (current < allQuestions.length - 1) {
-        current++;
-        renderQuestion();
-    }
-}
-function prevQuestion() {
-    if (current > 0) {
-        current--;
-        renderQuestion();
-    }
-}
-
-/* ---------------- STATS ---------------- */
-function updateStats() {
-    const answered = answers.filter(a => a !== null).length;
-    document.getElementById("answered").innerText = "Answered: " + answered;
-    document.getElementById("not-answered").innerText =
-        "Not answered: " + (allQuestions.length - answered);
-}
+document.addEventListener("fullscreenchange",()=>{
+  if(!document.fullscreenElement) submitQuiz();
+});
 </script>
-
 </body>
 </html>
